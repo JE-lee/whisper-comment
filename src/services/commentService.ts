@@ -21,6 +21,41 @@ let mockComments: Comment[] = [
         dislikes: 0,
         userAction: null,
         parentId: '1',
+        replies: [
+          {
+            id: '4',
+            content: '确实，特别是动画效果很流畅。',
+            author: '赵六',
+            timestamp: '2024-01-15T12:00:00Z',
+            likes: 2,
+            dislikes: 0,
+            userAction: null,
+            parentId: '2',
+            replies: [
+              {
+                id: '5',
+                content: '同意！这种现代化的设计很适合年轻用户。',
+                author: '钱七',
+                timestamp: '2024-01-15T12:30:00Z',
+                likes: 1,
+                dislikes: 0,
+                userAction: null,
+                parentId: '4',
+                replies: []
+              }
+            ]
+          }
+        ]
+      },
+      {
+        id: '6',
+        content: '希望能加上暗色主题的支持。',
+        author: '孙八',
+        timestamp: '2024-01-15T13:00:00Z',
+        likes: 8,
+        dislikes: 1,
+        userAction: null,
+        parentId: '1',
         replies: []
       }
     ]
@@ -32,6 +67,29 @@ let mockComments: Comment[] = [
     timestamp: '2024-01-15T12:45:00Z',
     likes: 3,
     dislikes: 1,
+    userAction: null,
+    parentId: null,
+    replies: [
+      {
+        id: '7',
+        content: '我在 iPhone 上测试了，确实有这个问题。',
+        author: '周九',
+        timestamp: '2024-01-15T13:30:00Z',
+        likes: 2,
+        dislikes: 0,
+        userAction: null,
+        parentId: '3',
+        replies: []
+      }
+    ]
+  },
+  {
+    id: '8',
+    content: '整体体验很好，加载速度也很快！👍',
+    author: '吴十',
+    timestamp: '2024-01-15T14:00:00Z',
+    likes: 15,
+    dislikes: 0,
     userAction: null,
     parentId: null,
     replies: []

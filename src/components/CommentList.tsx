@@ -1,4 +1,5 @@
 import { MessageCircle } from 'lucide-preact'
+import { clsx } from 'clsx'
 import type { Comment, CreateCommentRequest, VoteRequest } from '../types/comment'
 import { CommentItem } from './CommentItem'
 
@@ -59,15 +60,18 @@ export function CommentList({ comments, loading, onVote, onReply }: CommentListP
       </div>
 
       {/* 评论列表 */}
-      <div class="space-y-4">
-        {comments.map((comment) => (
-          <CommentItem
-            key={comment.id}
-            comment={comment}
-            onVote={onVote}
-            onReply={onReply}
-            depth={0}
-          />
+      <div class="space-y-6">
+        {comments.map((comment, index) => (
+          <div key={comment.id} class={clsx(
+            index > 0 && 'pt-6 border-t border-gray-100'
+          )}>
+            <CommentItem
+              comment={comment}
+              onVote={onVote}
+              onReply={onReply}
+              depth={0}
+            />
+          </div>
         ))}
       </div>
     </div>

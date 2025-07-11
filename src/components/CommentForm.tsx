@@ -55,7 +55,7 @@ export function CommentForm({ onSubmit, parentId, placeholder = "写下你的评
       class={clsx(
         'space-y-4',
         isReply 
-          ? 'bg-gray-50 p-4 rounded-lg border' 
+          ? 'bg-gray-50 p-4 rounded-lg border border-gray-200' 
           : 'bg-white border border-gray-200 rounded-xl p-6 shadow-sm'
       )}
     >
