@@ -103,7 +103,7 @@ export function CommentItem({ comment, onVote, onReply, depth = 0 }: CommentItem
       {/* 主评论或回复容器 */}
       <div class={clsx(
         'flex w-full',
-        depth > 0 && 'mt-3'
+        depth > 0 && 'mt-2'
       )}>
         {/* 左侧连接线区域 */}
         {depth > 0 && (
@@ -119,22 +119,22 @@ export function CommentItem({ comment, onVote, onReply, depth = 0 }: CommentItem
 
         {/* 评论内容区域 */}
         <div class="flex-1 min-w-0">
-          {/* 评论主体 */}
-          <div class="group bg-white rounded-lg border border-gray-200 p-4 transition-all duration-200 hover:shadow-md">
+                      {/* 评论主体 */}
+            <div class="group bg-white rounded-lg border border-gray-200 p-3 transition-all duration-200 hover:shadow-md">
             {/* 作者和时间 */}
-            <div class="flex items-center space-x-2 mb-3">
+            <div class="flex items-start space-x-2 mb-2">
               <div class={clsx(
-                'rounded-full flex items-center justify-center text-white text-sm font-medium',
+                'rounded-full flex items-center justify-center text-white text-sm font-medium flex-shrink-0',
                 depth === 0 ? 'w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600' : 'w-7 h-7 bg-gradient-to-br from-gray-500 to-gray-600'
               )}>
                 {comment.author.charAt(0)}
               </div>
               <div class="flex-1 min-w-0">
                 <h4 class={clsx(
-                  'font-medium text-gray-900',
+                  'font-medium text-gray-900 text-left',
                   depth > 0 && 'text-sm'
                 )}>{comment.author}</h4>
-                <div class="flex items-center space-x-1 text-xs text-gray-500">
+                <div class="flex items-center space-x-1 text-xs text-gray-500 text-left">
                   <Clock class="h-3 w-3" />
                   <span>{formatTime(comment.timestamp)}</span>
                   {depth > 0 && <span class="text-gray-400">• 回复</span>}
@@ -143,22 +143,22 @@ export function CommentItem({ comment, onVote, onReply, depth = 0 }: CommentItem
             </div>
 
             {/* 评论内容 */}
-            <div class="mb-4">
+            <div class="mb-3 text-left">
               <p class={clsx(
-                'text-gray-700 leading-relaxed whitespace-pre-wrap',
+                'text-gray-700 leading-relaxed whitespace-pre-wrap text-left',
                 depth > 0 && 'text-sm'
               )}>{comment.content}</p>
             </div>
 
             {/* 操作按钮 */}
             <div class="flex items-center justify-between">
-              <div class="flex items-center space-x-4">
+              <div class="flex items-center space-x-3 text-left">
                 {/* 点赞按钮 */}
                 <button
                   onClick={() => handleVote('like')}
                   disabled={isVoting}
                   class={clsx(
-                    'flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200',
+                    'flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg text-sm font-medium transition-all duration-200',
                     comment.userAction === 'like'
                       ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
                       : 'text-gray-600 hover:bg-gray-100 hover:text-blue-600',
@@ -178,7 +178,7 @@ export function CommentItem({ comment, onVote, onReply, depth = 0 }: CommentItem
                   onClick={() => handleVote('dislike')}
                   disabled={isVoting}
                   class={clsx(
-                    'flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200',
+                    'flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg text-sm font-medium transition-all duration-200',
                     comment.userAction === 'dislike'
                       ? 'bg-red-100 text-red-700 hover:bg-red-200'
                       : 'text-gray-600 hover:bg-gray-100 hover:text-red-600',
@@ -197,7 +197,7 @@ export function CommentItem({ comment, onVote, onReply, depth = 0 }: CommentItem
                 <button
                   onClick={() => setShowReplyForm(!showReplyForm)}
                   class={clsx(
-                    'flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-800 transition-all duration-200',
+                    'flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-800 transition-all duration-200',
                     showReplyForm && 'bg-gray-100 text-gray-800'
                   )}
                 >
@@ -212,7 +212,7 @@ export function CommentItem({ comment, onVote, onReply, depth = 0 }: CommentItem
                   onClick={handleToggleExpanded}
                   disabled={isAnimating}
                   class={clsx(
-                    "flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-all duration-200 transform hover:scale-105 active:scale-95",
+                    "flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg text-sm font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-all duration-200 transform hover:scale-105 active:scale-95",
                     isAnimating && "pointer-events-none opacity-70",
                     "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
                   )}
@@ -233,7 +233,7 @@ export function CommentItem({ comment, onVote, onReply, depth = 0 }: CommentItem
 
           {/* 回复表单 */}
           {showReplyForm && (
-            <div class="mt-3 animate-fade-in">
+            <div class="mt-2 animate-fade-in">
               <div class="transform transition-all duration-300 ease-out animate-slide-down">
                 <CommentForm
                   onSubmit={handleReplySubmit}
@@ -249,7 +249,7 @@ export function CommentItem({ comment, onVote, onReply, depth = 0 }: CommentItem
           {/* 回复列表 */}
           {comment.replies.length > 0 && (
             <div class={clsx(
-              "mt-2 overflow-hidden transition-all duration-300 ease-in-out",
+              "mt-1.5 overflow-hidden transition-all duration-300 ease-in-out",
               isExpanded 
                 ? "max-h-screen opacity-100 transform translate-y-0" 
                 : "max-h-0 opacity-0 transform -translate-y-2"
@@ -274,7 +274,7 @@ export function CommentItem({ comment, onVote, onReply, depth = 0 }: CommentItem
           {/* 收起状态下的回复预览 */}
           {comment.replies.length > 0 && (
             <div class={clsx(
-              "mt-2 overflow-hidden transition-all duration-300 ease-in-out",
+              "mt-1.5 overflow-hidden transition-all duration-300 ease-in-out",
               !isExpanded 
                 ? "max-h-20 opacity-100 transform translate-y-0" 
                 : "max-h-0 opacity-0 transform -translate-y-2"
@@ -287,7 +287,7 @@ export function CommentItem({ comment, onVote, onReply, depth = 0 }: CommentItem
                   onClick={handleToggleExpanded}
                   disabled={isAnimating}
                   class={clsx(
-                    "w-full flex items-center space-x-2 text-sm text-gray-500 bg-gray-50 rounded-lg p-3 border border-gray-200 hover:bg-gray-100 hover:border-gray-300 transition-all duration-200 transform hover:scale-[1.02]",
+                    "w-full flex items-center space-x-2 text-sm text-gray-500 bg-gray-50 rounded-lg p-2.5 border border-gray-200 hover:bg-gray-100 hover:border-gray-300 transition-all duration-200 transform hover:scale-[1.02]",
                     isAnimating && "pointer-events-none opacity-70"
                   )}
                 >
@@ -312,9 +312,11 @@ export function CommentItem({ comment, onVote, onReply, depth = 0 }: CommentItem
                       </div>
                     )}
                   </div>
-                  <span class="flex-1 text-left">
-                    {comment.replies[0].author} 等 {totalReplies} 人参与了讨论
-                  </span>
+                  <div class="flex-1 text-left">
+                    <span class="text-left">
+                      {comment.replies[0].author} 等 {totalReplies} 人参与了讨论
+                    </span>
+                  </div>
                   <div class="transition-transform duration-200 hover:translate-x-1">
                     <ChevronRight class="h-4 w-4 text-gray-400" />
                   </div>

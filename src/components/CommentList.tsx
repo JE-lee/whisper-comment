@@ -50,7 +50,7 @@ export function CommentList({ comments, loading, onVote, onReply }: CommentListP
   }
 
   return (
-    <div class="space-y-6">
+    <div class="space-y-4">
       {/* 评论统计 */}
       <div class="flex items-center space-x-2">
         <MessageCircle class="h-5 w-5 text-gray-600" />
@@ -60,10 +60,10 @@ export function CommentList({ comments, loading, onVote, onReply }: CommentListP
       </div>
 
       {/* 评论列表 */}
-      <div class="space-y-6">
+      <div class="space-y-4">
         {comments.map((comment, index) => (
           <div key={comment.id} class={clsx(
-            index > 0 && 'pt-6 border-t border-gray-100'
+            index > 0 && 'pt-4 border-t border-gray-100'
           )}>
             <CommentItem
               comment={comment}

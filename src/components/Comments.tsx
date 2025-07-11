@@ -106,7 +106,7 @@ export function Comments({ className = '', title = '评论区' }: CommentsProps)
   return (
     <div class={`max-w-4xl mx-auto ${className}`}>
       {/* 标题 */}
-      <div class="mb-8">
+      <div class="mb-6">
         <h2 class="text-2xl font-bold text-gray-900 mb-2">{title}</h2>
         <div class="h-1 w-20 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full"></div>
       </div>
@@ -128,7 +128,7 @@ export function Comments({ className = '', title = '评论区' }: CommentsProps)
       )}
 
       {/* 评论表单 */}
-      <div class="mb-8">
+      <div class="mb-6">
         <CommentForm onSubmit={handleCreateComment} />
       </div>
 
