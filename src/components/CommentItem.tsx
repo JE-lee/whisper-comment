@@ -1,5 +1,5 @@
 import { useState } from 'preact/hooks'
-import { ThumbsUp, ThumbsDown, Reply, Clock } from 'lucide-preact'
+import { ThumbsUp, ThumbsDown, Reply, Clock, ChevronDown, ChevronRight } from 'lucide-preact'
 import { clsx } from 'clsx'
 import type { Comment, CreateCommentRequest, VoteRequest } from '../types/comment'
 import { CommentForm } from './CommentForm'
@@ -15,6 +15,8 @@ export function CommentItem({ comment, onVote, onReply, depth = 0 }: CommentItem
   const [showReplyForm, setShowReplyForm] = useState(false)
   const [isVoting, setIsVoting] = useState(false)
   const [animateAction, setAnimateAction] = useState<'like' | 'dislike' | null>(null)
+  const [isExpanded, setIsExpanded] = useState(depth < 2) // 深度小于2时默认展开，深度>=2时默认收起
+  const [isAnimating, setIsAnimating] = useState(false) // 动画状态
 
   // 格式化时间
   const formatTime = (timestamp: string) => {
@@ -30,6 +32,29 @@ export function CommentItem({ comment, onVote, onReply, depth = 0 }: CommentItem
     if (hours < 24) return `${hours}小时前`
     if (days < 30) return `${days}天前`
     return date.toLocaleDateString()
+  }
+
+  // 递归计算总回复数量
+  const getTotalRepliesCount = (comments: Comment[]): number => {
+    return comments.reduce((total, comment) => {
+      return total + 1 + getTotalRepliesCount(comment.replies)
+    }, 0)
+  }
+
+  // 获取总回复数量
+  const totalReplies = getTotalRepliesCount(comment.replies)
+
+  // 处理展开/收起动画
+  const handleToggleExpanded = () => {
+    if (isAnimating) return
+    
+    setIsAnimating(true)
+    setIsExpanded(!isExpanded)
+    
+    // 动画完成后重置状态
+    setTimeout(() => {
+      setIsAnimating(false)
+    }, 300)
   }
 
   // 处理点赞/踩
@@ -74,7 +99,7 @@ export function CommentItem({ comment, onVote, onReply, depth = 0 }: CommentItem
   }
 
   return (
-    <div class="w-full">
+    <div class="w-full animate-fade-in">
       {/* 主评论或回复容器 */}
       <div class={clsx(
         'flex w-full',
@@ -84,11 +109,11 @@ export function CommentItem({ comment, onVote, onReply, depth = 0 }: CommentItem
         {depth > 0 && (
           <div class="flex-shrink-0 w-6 relative mr-2">
             {/* 垂直连接线 */}
-            <div class="absolute left-3 top-0 bottom-0 w-0.5 bg-gray-300"></div>
+            <div class="absolute left-3 top-0 bottom-0 w-0.5 bg-gray-300 animate-fade-in"></div>
             {/* 水平连接线到评论 */}
-            <div class="absolute left-3 top-6 w-3 h-0.5 bg-gray-300"></div>
+            <div class="absolute left-3 top-6 w-3 h-0.5 bg-gray-300 animate-fade-in"></div>
             {/* 圆点连接点 */}
-            <div class="absolute left-2.5 top-6 w-1 h-1 bg-gray-400 rounded-full"></div>
+            <div class="absolute left-2.5 top-6 w-1 h-1 bg-gray-400 rounded-full animate-fade-in"></div>
           </div>
         )}
 
@@ -126,86 +151,175 @@ export function CommentItem({ comment, onVote, onReply, depth = 0 }: CommentItem
             </div>
 
             {/* 操作按钮 */}
-            <div class="flex items-center space-x-4">
-              {/* 点赞按钮 */}
-              <button
-                onClick={() => handleVote('like')}
-                disabled={isVoting}
-                class={clsx(
-                  'flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200',
-                  comment.userAction === 'like'
-                    ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-                    : 'text-gray-600 hover:bg-gray-100 hover:text-blue-600',
-                  animateAction === 'like' && 'animate-like-bounce',
-                  isVoting && 'opacity-50 cursor-not-allowed'
-                )}
-              >
-                <ThumbsUp class={clsx(
-                  'h-4 w-4 transition-transform duration-200',
-                  comment.userAction === 'like' && 'scale-110'
-                )} />
-                <span>{comment.likes}</span>
-              </button>
+            <div class="flex items-center justify-between">
+              <div class="flex items-center space-x-4">
+                {/* 点赞按钮 */}
+                <button
+                  onClick={() => handleVote('like')}
+                  disabled={isVoting}
+                  class={clsx(
+                    'flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200',
+                    comment.userAction === 'like'
+                      ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                      : 'text-gray-600 hover:bg-gray-100 hover:text-blue-600',
+                    animateAction === 'like' && 'animate-like-bounce',
+                    isVoting && 'opacity-50 cursor-not-allowed'
+                  )}
+                >
+                  <ThumbsUp class={clsx(
+                    'h-4 w-4 transition-transform duration-200',
+                    comment.userAction === 'like' && 'scale-110'
+                  )} />
+                  <span>{comment.likes}</span>
+                </button>
 
-              {/* 踩按钮 */}
-              <button
-                onClick={() => handleVote('dislike')}
-                disabled={isVoting}
-                class={clsx(
-                  'flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200',
-                  comment.userAction === 'dislike'
-                    ? 'bg-red-100 text-red-700 hover:bg-red-200'
-                    : 'text-gray-600 hover:bg-gray-100 hover:text-red-600',
-                  animateAction === 'dislike' && 'animate-dislike-bounce',
-                  isVoting && 'opacity-50 cursor-not-allowed'
-                )}
-              >
-                <ThumbsDown class={clsx(
-                  'h-4 w-4 transition-transform duration-200',
-                  comment.userAction === 'dislike' && 'scale-110'
-                )} />
-                <span>{comment.dislikes}</span>
-              </button>
+                {/* 踩按钮 */}
+                <button
+                  onClick={() => handleVote('dislike')}
+                  disabled={isVoting}
+                  class={clsx(
+                    'flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200',
+                    comment.userAction === 'dislike'
+                      ? 'bg-red-100 text-red-700 hover:bg-red-200'
+                      : 'text-gray-600 hover:bg-gray-100 hover:text-red-600',
+                    animateAction === 'dislike' && 'animate-dislike-bounce',
+                    isVoting && 'opacity-50 cursor-not-allowed'
+                  )}
+                >
+                  <ThumbsDown class={clsx(
+                    'h-4 w-4 transition-transform duration-200',
+                    comment.userAction === 'dislike' && 'scale-110'
+                  )} />
+                  <span>{comment.dislikes}</span>
+                </button>
 
-              {/* 回复按钮 */}
-              <button
-                onClick={() => setShowReplyForm(!showReplyForm)}
-                class={clsx(
-                  'flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-800 transition-all duration-200',
-                  showReplyForm && 'bg-gray-100 text-gray-800'
-                )}
-              >
-                <Reply class="h-4 w-4" />
-                <span>回复</span>
-              </button>
+                {/* 回复按钮 */}
+                <button
+                  onClick={() => setShowReplyForm(!showReplyForm)}
+                  class={clsx(
+                    'flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-800 transition-all duration-200',
+                    showReplyForm && 'bg-gray-100 text-gray-800'
+                  )}
+                >
+                  <Reply class="h-4 w-4" />
+                  <span>回复</span>
+                </button>
+              </div>
+
+              {/* 展开/收起按钮 */}
+              {totalReplies > 0 && (
+                <button
+                  onClick={handleToggleExpanded}
+                  disabled={isAnimating}
+                  class={clsx(
+                    "flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-all duration-200 transform hover:scale-105 active:scale-95",
+                    isAnimating && "pointer-events-none opacity-70",
+                    "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+                  )}
+                >
+                  <div class={clsx(
+                    "transition-transform duration-300 ease-in-out",
+                    isExpanded ? "rotate-180" : "rotate-0"
+                  )}>
+                    <ChevronDown class="h-4 w-4" />
+                  </div>
+                  <span class="transition-all duration-200">
+                    {isExpanded ? '收起回复' : `查看 ${totalReplies} 条回复`}
+                  </span>
+                </button>
+              )}
             </div>
           </div>
 
           {/* 回复表单 */}
           {showReplyForm && (
-            <div class="mt-3">
-              <CommentForm
-                onSubmit={handleReplySubmit}
-                parentId={comment.id}
-                placeholder={`回复 @${comment.author}...`}
-                onCancel={() => setShowReplyForm(false)}
-                isReply={true}
-              />
+            <div class="mt-3 animate-fade-in">
+              <div class="transform transition-all duration-300 ease-out animate-slide-down">
+                <CommentForm
+                  onSubmit={handleReplySubmit}
+                  parentId={comment.id}
+                  placeholder={`回复 @${comment.author}...`}
+                  onCancel={() => setShowReplyForm(false)}
+                  isReply={true}
+                />
+              </div>
             </div>
           )}
 
           {/* 回复列表 */}
           {comment.replies.length > 0 && (
-            <div class="mt-2">
-              {comment.replies.map((reply) => (
-                <CommentItem
-                  key={reply.id}
-                  comment={reply}
-                  onVote={onVote}
-                  onReply={onReply}
-                  depth={depth + 1}
-                />
-              ))}
+            <div class={clsx(
+              "mt-2 overflow-hidden transition-all duration-300 ease-in-out",
+              isExpanded 
+                ? "max-h-screen opacity-100 transform translate-y-0" 
+                : "max-h-0 opacity-0 transform -translate-y-2"
+            )}>
+              <div class={clsx(
+                "transition-all duration-300 ease-in-out",
+                isExpanded ? "animate-fade-in" : "animate-fade-out"
+              )}>
+                {comment.replies.map((reply) => (
+                  <CommentItem
+                    key={reply.id}
+                    comment={reply}
+                    onVote={onVote}
+                    onReply={onReply}
+                    depth={depth + 1}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* 收起状态下的回复预览 */}
+          {comment.replies.length > 0 && (
+            <div class={clsx(
+              "mt-2 overflow-hidden transition-all duration-300 ease-in-out",
+              !isExpanded 
+                ? "max-h-20 opacity-100 transform translate-y-0" 
+                : "max-h-0 opacity-0 transform -translate-y-2"
+            )}>
+              <div class={clsx(
+                "transition-all duration-300 ease-in-out",
+                !isExpanded ? "animate-fade-in" : "animate-fade-out"
+              )}>
+                <button
+                  onClick={handleToggleExpanded}
+                  disabled={isAnimating}
+                  class={clsx(
+                    "w-full flex items-center space-x-2 text-sm text-gray-500 bg-gray-50 rounded-lg p-3 border border-gray-200 hover:bg-gray-100 hover:border-gray-300 transition-all duration-200 transform hover:scale-[1.02]",
+                    isAnimating && "pointer-events-none opacity-70"
+                  )}
+                >
+                  <div class="flex -space-x-1">
+                    {comment.replies.slice(0, 3).map((reply, index) => (
+                      <div
+                        key={reply.id}
+                        class={clsx(
+                          'w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium text-white border-2 border-white transition-transform duration-200 hover:scale-110',
+                          'bg-gradient-to-br from-gray-400 to-gray-600',
+                          index === 0 && 'z-30',
+                          index === 1 && 'z-20', 
+                          index === 2 && 'z-10'
+                        )}
+                      >
+                        {reply.author.charAt(0)}
+                      </div>
+                    ))}
+                    {comment.replies.length > 3 && (
+                      <div class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium text-gray-500 bg-gray-200 border-2 border-white transition-transform duration-200 hover:scale-110">
+                        +{comment.replies.length - 3}
+                      </div>
+                    )}
+                  </div>
+                  <span class="flex-1 text-left">
+                    {comment.replies[0].author} 等 {totalReplies} 人参与了讨论
+                  </span>
+                  <div class="transition-transform duration-200 hover:translate-x-1">
+                    <ChevronRight class="h-4 w-4 text-gray-400" />
+                  </div>
+                </button>
+              </div>
             </div>
           )}
         </div>

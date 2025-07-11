@@ -13,6 +13,12 @@ export default defineConfig({
         'like-bounce': 'likeBounce 0.3s ease-in-out',
         'dislike-bounce': 'dislikeBounce 0.3s ease-in-out',
         'pulse': 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        'expand': 'expand 0.3s ease-out',
+        'collapse': 'collapse 0.3s ease-in',
+        'fade-in': 'fadeIn 0.4s ease-out',
+        'fade-out': 'fadeOut 0.2s ease-in',
+        'slide-down': 'slideDown 0.3s ease-out',
+        'slide-up': 'slideUp 0.3s ease-in',
       },
       keyframes: {
         likeBounce: {
@@ -28,6 +34,78 @@ export default defineConfig({
         pulse: {
           '0%, 100%': { opacity: '1' },
           '50%': { opacity: '.5' }
+        },
+        expand: {
+          '0%': { 
+            maxHeight: '0',
+            opacity: '0',
+            transform: 'translateY(-8px) scale(0.98)'
+          },
+          '50%': {
+            opacity: '0.6',
+            transform: 'translateY(-4px) scale(0.99)'
+          },
+          '100%': { 
+            maxHeight: '2000px',
+            opacity: '1',
+            transform: 'translateY(0) scale(1)'
+          }
+        },
+        collapse: {
+          '0%': { 
+            maxHeight: '2000px',
+            opacity: '1',
+            transform: 'translateY(0) scale(1)'
+          },
+          '50%': {
+            opacity: '0.4',
+            transform: 'translateY(-4px) scale(0.99)'
+          },
+          '100%': { 
+            maxHeight: '0',
+            opacity: '0',
+            transform: 'translateY(-8px) scale(0.98)'
+          }
+        },
+        fadeIn: {
+          '0%': { 
+            opacity: '0',
+            transform: 'translateY(10px) scale(0.95)'
+          },
+          '100%': { 
+            opacity: '1',
+            transform: 'translateY(0) scale(1)'
+          }
+        },
+        fadeOut: {
+          '0%': { 
+            opacity: '1',
+            transform: 'translateY(0) scale(1)'
+          },
+          '100%': { 
+            opacity: '0',
+            transform: 'translateY(-10px) scale(0.95)'
+          }
+        },
+        slideDown: {
+          '0%': { 
+            maxHeight: '0',
+            opacity: '0'
+          },
+          '100%': { 
+            maxHeight: '500px',
+            opacity: '1'
+          }
+        },
+        slideUp: {
+          '0%': { 
+            maxHeight: '500px',
+            opacity: '1'
+          },
+          '100%': { 
+            maxHeight: '0',
+            opacity: '0'
+          }
         }
       }
     }
