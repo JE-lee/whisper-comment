@@ -152,57 +152,63 @@ export function CommentItem({ comment, onVote, onReply, depth = 0 }: CommentItem
 
             {/* 操作按钮 */}
             <div class="flex items-center justify-between">
-              <div class="flex items-center space-x-3 text-left">
+              <div class="flex items-center space-x-1 sm:space-x-2 text-left">
                 {/* 点赞按钮 */}
                 <button
                   onClick={() => handleVote('like')}
                   disabled={isVoting}
+                  aria-label={`点赞 ${comment.likes} 次`}
+                  title={`点赞 ${comment.likes} 次`}
                   class={clsx(
-                    'flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg text-sm font-medium transition-all duration-200',
+                    'flex items-center space-x-0 sm:space-x-1 px-1.5 sm:px-2 py-1 rounded text-sm font-medium transition-all duration-200 hover:bg-gray-100',
                     comment.userAction === 'like'
-                      ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-                      : 'text-gray-600 hover:bg-gray-100 hover:text-blue-600',
+                      ? 'text-blue-600 bg-blue-50 hover:bg-blue-100'
+                      : 'text-gray-600 hover:text-blue-600',
                     animateAction === 'like' && 'animate-like-bounce',
-                    isVoting && 'opacity-50 cursor-not-allowed'
+                    isVoting && 'opacity-50 cursor-not-allowed hover:bg-transparent'
                   )}
                 >
                   <ThumbsUp class={clsx(
                     'h-4 w-4 transition-transform duration-200',
                     comment.userAction === 'like' && 'scale-110'
                   )} />
-                  <span>{comment.likes}</span>
+                  <span class="hidden sm:inline">{comment.likes}</span>
                 </button>
 
                 {/* 踩按钮 */}
                 <button
                   onClick={() => handleVote('dislike')}
                   disabled={isVoting}
+                  aria-label={`踩 ${comment.dislikes} 次`}
+                  title={`踩 ${comment.dislikes} 次`}
                   class={clsx(
-                    'flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg text-sm font-medium transition-all duration-200',
+                    'flex items-center space-x-0 sm:space-x-1 px-1.5 sm:px-2 py-1 rounded text-sm font-medium transition-all duration-200 hover:bg-gray-100',
                     comment.userAction === 'dislike'
-                      ? 'bg-red-100 text-red-700 hover:bg-red-200'
-                      : 'text-gray-600 hover:bg-gray-100 hover:text-red-600',
+                      ? 'text-red-600 bg-red-50 hover:bg-red-100'
+                      : 'text-gray-600 hover:text-red-600',
                     animateAction === 'dislike' && 'animate-dislike-bounce',
-                    isVoting && 'opacity-50 cursor-not-allowed'
+                    isVoting && 'opacity-50 cursor-not-allowed hover:bg-transparent'
                   )}
                 >
                   <ThumbsDown class={clsx(
                     'h-4 w-4 transition-transform duration-200',
                     comment.userAction === 'dislike' && 'scale-110'
                   )} />
-                  <span>{comment.dislikes}</span>
+                  <span class="hidden sm:inline">{comment.dislikes}</span>
                 </button>
 
                 {/* 回复按钮 */}
                 <button
                   onClick={() => setShowReplyForm(!showReplyForm)}
+                  aria-label="回复评论"
+                  title="回复评论"
                   class={clsx(
-                    'flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-800 transition-all duration-200',
+                    'flex items-center space-x-0 sm:space-x-1 px-1.5 sm:px-2 py-1 rounded text-sm font-medium text-gray-600 transition-all duration-200 hover:bg-gray-100 hover:text-gray-800',
                     showReplyForm && 'bg-gray-100 text-gray-800'
                   )}
                 >
                   <Reply class="h-4 w-4" />
-                  <span>回复</span>
+                  <span class="hidden sm:inline">回复</span>
                 </button>
               </div>
 
@@ -211,10 +217,12 @@ export function CommentItem({ comment, onVote, onReply, depth = 0 }: CommentItem
                 <button
                   onClick={handleToggleExpanded}
                   disabled={isAnimating}
+                  aria-label={isExpanded ? '收起回复' : `查看 ${totalReplies} 条回复`}
+                  title={isExpanded ? '收起回复' : `查看 ${totalReplies} 条回复`}
                   class={clsx(
-                    "flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg text-sm font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-all duration-200 transform hover:scale-105 active:scale-95",
-                    isAnimating && "pointer-events-none opacity-70",
-                    "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+                    "flex items-center space-x-0 sm:space-x-1 px-1.5 sm:px-2 py-1 rounded text-sm font-medium text-gray-500 transition-all duration-200 hover:bg-gray-100 hover:text-gray-700 transform hover:scale-105 active:scale-95",
+                    isAnimating && "pointer-events-none opacity-70 hover:bg-transparent",
+                    "focus:outline-none"
                   )}
                 >
                   <div class={clsx(
@@ -223,7 +231,7 @@ export function CommentItem({ comment, onVote, onReply, depth = 0 }: CommentItem
                   )}>
                     <ChevronDown class="h-4 w-4" />
                   </div>
-                  <span class="transition-all duration-200">
+                  <span class="hidden sm:inline transition-all duration-200">
                     {isExpanded ? '收起回复' : `查看 ${totalReplies} 条回复`}
                   </span>
                 </button>
@@ -286,8 +294,10 @@ export function CommentItem({ comment, onVote, onReply, depth = 0 }: CommentItem
                 <button
                   onClick={handleToggleExpanded}
                   disabled={isAnimating}
+                  aria-label={`展开 ${totalReplies} 条回复`}
+                  title={`展开 ${totalReplies} 条回复`}
                   class={clsx(
-                    "w-full flex items-center space-x-2 text-sm text-gray-500 bg-gray-50 rounded-lg p-2.5 border border-gray-200 hover:bg-gray-100 hover:border-gray-300 transition-all duration-200 transform hover:scale-[1.02]",
+                    "w-full flex items-center space-x-2 text-sm text-gray-500 bg-gray-50 rounded-lg p-3 border border-gray-200 hover:bg-gray-100 hover:border-gray-300 transition-all duration-200 transform hover:scale-[1.01]",
                     isAnimating && "pointer-events-none opacity-70"
                   )}
                 >
