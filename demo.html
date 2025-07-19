@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Whisper Comment Demo</title>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #f9fafb;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+
+      .header {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+      }
+
+      .demo-section {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+      }
+
+      .code-block {
+        background: #f3f4f6;
+        padding: 15px;
+        border-radius: 6px;
+        font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
+        font-size: 14px;
+        overflow-x: auto;
+        margin: 10px 0;
+      }
+
+      .usage-example {
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+        padding: 15px;
+        margin: 10px 0;
+        background: #fafafa;
+      }
+
+      .badge {
+        display: inline-block;
+        padding: 4px 12px;
+        background: #10b981;
+        color: white;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+        margin-left: 10px;
+      }
+
+      .method-card {
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 20px;
+        margin: 15px 0;
+        background: #fafafa;
+      }
+
+      .method-title {
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 10px;
+        color: #374151;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>Whisper Comment 组件演示</h1>
+        <p>这是一个基于 Preact 和 TwindCSS 构建的现代化评论组件。</p>
+      </div>
+
+      <div class="demo-section">
+        <h2>使用方式</h2>
+
+        <div class="method-card">
+          <div class="method-title">
+            方式一：自动挂载（推荐）<span class="badge">NEW</span>
+          </div>
+
+          <h4>1. 引入脚本</h4>
+          <div class="code-block">
+            &lt;script src="./dist/whisper-comment.umd.js"&gt;&lt;/script&gt;
+          </div>
+
+          <h4>2. 添加容器元素（使用 data 属性）</h4>
+          <div class="code-block">
+            &lt;!-- 基础用法 --&gt; &lt;div data-whisper-comment&gt;&lt;/div&gt;
+            &lt;!-- 自定义标题和样式 --&gt; &lt;div data-whisper-comment
+            data-title="参与讨论"
+            data-class-name="my-custom-class"&gt;&lt;/div&gt;
+          </div>
+
+          <h4>3. 无需手动初始化！</h4>
+          <p style="color: #10b981; font-weight: 500">
+            组件会在页面加载完成后自动挂载到所有具有
+            <code>data-whisper-comment</code> 属性的元素上。
+          </p>
+        </div>
+
+        <div class="method-card">
+          <div class="method-title">方式二：手动挂载（向后兼容）</div>
+
+          <h4>1. 引入脚本</h4>
+          <div class="code-block">
+            &lt;script src="./dist/whisper-comment.umd.js"&gt;&lt;/script&gt;
+          </div>
+
+          <h4>2. 添加容器元素</h4>
+          <div class="code-block">
+            &lt;div id="whisper-comment"&gt;&lt;/div&gt;
+          </div>
+
+          <h4>3. 手动初始化组件</h4>
+          <div class="code-block">
+            &lt;script&gt; // 使用 mount 函数
+            WhisperComment.mount('#whisper-comment', { title: '评论区',
+            className: 'my-custom-class' }); &lt;/script&gt;
+          </div>
+        </div>
+      </div>
+
+      <div class="demo-section">
+        <h2>配置选项</h2>
+        <table style="width: 100%; border-collapse: collapse">
+          <thead>
+            <tr style="background: #f9fafb">
+              <th
+                style="
+                  padding: 12px;
+                  text-align: left;
+                  border: 1px solid #e5e7eb;
+                "
+              >
+                属性
+              </th>
+              <th
+                style="
+                  padding: 12px;
+                  text-align: left;
+                  border: 1px solid #e5e7eb;
+                "
+              >
+                类型
+              </th>
+              <th
+                style="
+                  padding: 12px;
+                  text-align: left;
+                  border: 1px solid #e5e7eb;
+                "
+              >
+                默认值
+              </th>
+              <th
+                style="
+                  padding: 12px;
+                  text-align: left;
+                  border: 1px solid #e5e7eb;
+                "
+              >
+                说明
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="padding: 12px; border: 1px solid #e5e7eb">
+                <code>data-title</code>
+              </td>
+              <td style="padding: 12px; border: 1px solid #e5e7eb">string</td>
+              <td style="padding: 12px; border: 1px solid #e5e7eb">'评论区'</td>
+              <td style="padding: 12px; border: 1px solid #e5e7eb">
+                评论区的标题
+              </td>
+            </tr>
+            <tr style="background: #f9fafb">
+              <td style="padding: 12px; border: 1px solid #e5e7eb">
+                <code>data-class-name</code>
+              </td>
+              <td style="padding: 12px; border: 1px solid #e5e7eb">string</td>
+              <td style="padding: 12px; border: 1px solid #e5e7eb">''</td>
+              <td style="padding: 12px; border: 1px solid #e5e7eb">
+                自定义 CSS 类名
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="demo-section">
+        <h2>实际演示</h2>
+
+        <h3>自动挂载演示</h3>
+        <p>下面的评论区使用了自动挂载功能：</p>
+        <div class="usage-example">
+          <!-- 自动挂载：只需要添加 data 属性即可 -->
+          <div
+            data-whisper-comment
+            data-title="自动挂载演示"
+            data-class-name="auto-mount-demo"
+          ></div>
+        </div>
+
+        <h3>手动挂载演示</h3>
+        <p>下面的评论区使用了传统的手动挂载方式：</p>
+        <div class="usage-example">
+          <div id="manual-comment"></div>
+        </div>
+      </div>
+
+      <div class="demo-section">
+        <h2>特性</h2>
+        <ul>
+          <li>✅ 自动挂载：无需手动初始化，开箱即用</li>
+          <li>✅ 响应式设计，适配各种设备</li>
+          <li>✅ 支持评论和回复的树形结构</li>
+          <li>✅ 点赞和踩功能，带有流畅的动画效果</li>
+          <li>✅ 用户友好的交互体验</li>
+          <li>✅ 现代化的视觉设计</li>
+          <li>✅ 基于 Preact，轻量级高性能</li>
+          <li>✅ 使用 TwindCSS，无需额外 CSS 文件</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- 引入评论组件样式 -->
+    <link rel="stylesheet" href="./dist/whisper-comment.css" />
+
+    <!-- 引入评论组件脚本 -->
+    <script src="./dist/whisper-comment.umd.js"></script>
+
+    <!-- 手动挂载演示（保持向后兼容） -->
+    <script>
+      // 等待页面完全加载后再初始化手动挂载的评论区
+      window.addEventListener("load", function () {
+        function initManualComment() {
+          if (typeof window.WhisperComment !== "undefined") {
+            console.log("手动挂载评论组件...");
+            // 手动挂载到指定元素
+            window.WhisperComment.mount("#manual-comment", {
+              title: "手动挂载演示",
+              className: "manual-mount-demo",
+            });
+            console.log("手动挂载完成");
+          } else {
+            console.log("WhisperComment 还未加载，等待...");
+            setTimeout(initManualComment, 100);
+          }
+        }
+
+        // 开始手动挂载
+        initManualComment();
+      });
+    </script>
+  </body>
+</html>

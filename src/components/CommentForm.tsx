@@ -1,5 +1,5 @@
 import { useState } from 'preact/hooks'
-import { Send, User } from 'lucide-preact'
+import { Send, User } from './Icons'
 import { clsx } from 'clsx'
 import type { CreateCommentRequest } from '../types/comment'
 

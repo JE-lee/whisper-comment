@@ -1,4 +1,4 @@
-import { MessageCircle } from 'lucide-preact'
+import { MessageCircle } from './Icons'
 import { clsx } from 'clsx'
 import type { Comment, CreateCommentRequest, VoteRequest } from '../types/comment'
 import { CommentItem } from './CommentItem'

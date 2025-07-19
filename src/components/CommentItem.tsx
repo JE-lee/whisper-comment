@@ -1,5 +1,5 @@
 import { useState } from 'preact/hooks'
-import { ThumbsUp, ThumbsDown, Reply, Clock, ChevronDown, ChevronRight } from 'lucide-preact'
+import { ThumbsUp, ThumbsDown, Reply, Clock, ChevronDown, ChevronRight } from './Icons'
 import { clsx } from 'clsx'
 import type { Comment, CreateCommentRequest, VoteRequest } from '../types/comment'
 import { CommentForm } from './CommentForm'
@@ -88,15 +88,15 @@ export function CommentItem({ comment, onVote, onReply, depth = 0 }: CommentItem
   }
 
   // 获取缩进样式（使用固定类名）
-  const getIndentStyle = () => {
-    if (depth === 0) return ''
-    switch (depth) {
-      case 1: return 'ml-8'
-      case 2: return 'ml-16'
-      case 3: return 'ml-24'
-      default: return 'ml-32' // 最大缩进
-    }
-  }
+  // const getIndentStyle = () => {
+  //   if (depth === 0) return ''
+  //   switch (depth) {
+  //     case 1: return 'ml-8'
+  //     case 2: return 'ml-16'
+  //     case 3: return 'ml-24'
+  //     default: return 'ml-32' // 最大缩进
+  //   }
+  // }
 
   return (
     <div class="w-full animate-fade-in">

@@ -1,5 +1,4 @@
 import { Comments } from './components/Comments'
-import './app.css'
 
 export function App() {
   return (

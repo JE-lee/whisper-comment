@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'preact/hooks'
-import { Loader2, AlertCircle } from 'lucide-preact'
+import { Loader2, AlertCircle } from './Icons'
 import type { Comment, CreateCommentRequest, VoteRequest } from '../types/comment'
 import { commentService } from '../services/commentService'
 import { CommentForm } from './CommentForm'
