@@ -4,4 +4,30 @@
 
 * {
   box-sizing: border-box;
+}
+
+:root {
+  --wc-bg: #fff;
+  --wc-bg-secondary: #f9fafb;
+  --wc-border: #e5e7eb;
+  --wc-text: #1f2937;
+  --wc-text-secondary: #6b7280;
+  --wc-primary: #2563eb;
+  --wc-primary-dark: #1e40af;
+  --wc-danger: #ef4444;
+  --wc-danger-bg: #fef2f2;
+  --wc-danger-border: #fecaca;
+}
+
+.wc-dark {
+  --wc-bg: #18181b;
+  --wc-bg-secondary: #232336;
+  --wc-border: #27272a;
+  --wc-text: #f4f4f5;
+  --wc-text-secondary: #a1a1aa;
+  --wc-primary: #60a5fa;
+  --wc-primary-dark: #2563eb;
+  --wc-danger: #f87171;
+  --wc-danger-bg: #3f1d1d;
+  --wc-danger-border: #7f1d1d;
 } 

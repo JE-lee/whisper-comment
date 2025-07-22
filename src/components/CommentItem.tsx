@@ -109,47 +109,44 @@ export function CommentItem({ comment, onVote, onReply, depth = 0 }: CommentItem
         {depth > 0 && (
           <div class="flex-shrink-0 w-6 relative mr-2">
             {/* 垂直连接线 */}
-            <div class="absolute left-3 top-0 bottom-0 w-0.5 bg-gray-300 animate-fade-in"></div>
+            <div class="absolute left-3 top-0 bottom-0 w-0.5 animate-fade-in" style={{ background: 'var(--wc-border)' }}></div>
             {/* 水平连接线到评论 */}
-            <div class="absolute left-3 top-6 w-3 h-0.5 bg-gray-300 animate-fade-in"></div>
+            <div class="absolute left-3 top-6 w-3 h-0.5 animate-fade-in" style={{ background: 'var(--wc-border)' }}></div>
             {/* 圆点连接点 */}
-            <div class="absolute left-2.5 top-6 w-1 h-1 bg-gray-400 rounded-full animate-fade-in"></div>
+            <div class="absolute left-2.5 top-6 w-1 h-1 rounded-full animate-fade-in" style={{ background: 'var(--wc-text-secondary)' }}></div>
           </div>
         )}
-
         {/* 评论内容区域 */}
         <div class="flex-1 min-w-0">
-                      {/* 评论主体 */}
-            <div class="group bg-white rounded-lg border border-gray-200 p-3 transition-all duration-200 hover:shadow-md">
+          {/* 评论主体 */}
+          <div class="group rounded-lg border p-3 transition-all duration-200 hover:shadow-md" style={{ background: 'var(--wc-bg)', borderColor: 'var(--wc-border)' }}>
             {/* 作者和时间 */}
             <div class="flex items-start space-x-2 mb-2">
               <div class={clsx(
                 'rounded-full flex items-center justify-center text-white text-sm font-medium flex-shrink-0',
-                depth === 0 ? 'w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600' : 'w-7 h-7 bg-gradient-to-br from-gray-500 to-gray-600'
-              )}>
+                depth === 0 ? 'w-8 h-8' : 'w-7 h-7'
+              )} style={{ background: depth === 0 ? 'linear-gradient(135deg, var(--wc-primary), var(--wc-primary-dark))' : 'linear-gradient(135deg, #6b7280, #374151)' }}>
                 {comment.author.charAt(0)}
               </div>
               <div class="flex-1 min-w-0">
                 <h4 class={clsx(
-                  'font-medium text-gray-900 text-left',
+                  'font-medium text-left',
                   depth > 0 && 'text-sm'
-                )}>{comment.author}</h4>
-                <div class="flex items-center space-x-1 text-xs text-gray-500 text-left">
+                )} style={{ color: 'var(--wc-text)' }}>{comment.author}</h4>
+                <div class="flex items-center space-x-1 text-xs text-left" style={{ color: 'var(--wc-text-secondary)' }}>
                   <Clock class="h-3 w-3" />
                   <span>{formatTime(comment.timestamp)}</span>
-                  {depth > 0 && <span class="text-gray-400">• 回复</span>}
+                  {depth > 0 && <span>• 回复</span>}
                 </div>
               </div>
             </div>
-
             {/* 评论内容 */}
             <div class="mb-3 text-left">
               <p class={clsx(
-                'text-gray-700 leading-relaxed whitespace-pre-wrap text-left',
+                'leading-relaxed whitespace-pre-wrap text-left',
                 depth > 0 && 'text-sm'
-              )}>{comment.content}</p>
+              )} style={{ color: 'var(--wc-text)' }}>{comment.content}</p>
             </div>
-
             {/* 操作按钮 */}
             <div class="flex items-center justify-between">
               <div class="flex items-center space-x-1 sm:space-x-2 text-left">
@@ -160,13 +157,14 @@ export function CommentItem({ comment, onVote, onReply, depth = 0 }: CommentItem
                   aria-label={`点赞 ${comment.likes} 次`}
                   title={`点赞 ${comment.likes} 次`}
                   class={clsx(
-                    'flex items-center space-x-0 sm:space-x-1 px-1.5 sm:px-2 py-1 rounded text-sm font-medium transition-all duration-200 hover:bg-gray-100',
+                    'flex items-center space-x-0 sm:space-x-1 px-1.5 sm:px-2 py-1 rounded text-sm font-medium transition-all duration-200',
                     comment.userAction === 'like'
-                      ? 'text-blue-600 bg-blue-50 hover:bg-blue-100'
-                      : 'text-gray-600 hover:text-blue-600',
+                      ? ''
+                      : '',
                     animateAction === 'like' && 'animate-like-bounce',
                     isVoting && 'opacity-50 cursor-not-allowed hover:bg-transparent'
                   )}
+                  style={{ color: comment.userAction === 'like' ? 'var(--wc-primary)' : 'var(--wc-text-secondary)', background: comment.userAction === 'like' ? 'var(--wc-bg-secondary)' : 'transparent' }}
                 >
                   <ThumbsUp class={clsx(
                     'h-4 w-4 transition-transform duration-200',
@@ -174,7 +172,6 @@ export function CommentItem({ comment, onVote, onReply, depth = 0 }: CommentItem
                   )} />
                   <span class="hidden sm:inline">{comment.likes}</span>
                 </button>
-
                 {/* 踩按钮 */}
                 <button
                   onClick={() => handleVote('dislike')}
@@ -182,13 +179,14 @@ export function CommentItem({ comment, onVote, onReply, depth = 0 }: CommentItem
                   aria-label={`踩 ${comment.dislikes} 次`}
                   title={`踩 ${comment.dislikes} 次`}
                   class={clsx(
-                    'flex items-center space-x-0 sm:space-x-1 px-1.5 sm:px-2 py-1 rounded text-sm font-medium transition-all duration-200 hover:bg-gray-100',
+                    'flex items-center space-x-0 sm:space-x-1 px-1.5 sm:px-2 py-1 rounded text-sm font-medium transition-all duration-200',
                     comment.userAction === 'dislike'
-                      ? 'text-red-600 bg-red-50 hover:bg-red-100'
-                      : 'text-gray-600 hover:text-red-600',
+                      ? ''
+                      : '',
                     animateAction === 'dislike' && 'animate-dislike-bounce',
                     isVoting && 'opacity-50 cursor-not-allowed hover:bg-transparent'
                   )}
+                  style={{ color: comment.userAction === 'dislike' ? 'var(--wc-danger)' : 'var(--wc-text-secondary)', background: comment.userAction === 'dislike' ? 'var(--wc-danger-bg)' : 'transparent' }}
                 >
                   <ThumbsDown class={clsx(
                     'h-4 w-4 transition-transform duration-200',
@@ -196,22 +194,21 @@ export function CommentItem({ comment, onVote, onReply, depth = 0 }: CommentItem
                   )} />
                   <span class="hidden sm:inline">{comment.dislikes}</span>
                 </button>
-
                 {/* 回复按钮 */}
                 <button
                   onClick={() => setShowReplyForm(!showReplyForm)}
                   aria-label="回复评论"
                   title="回复评论"
                   class={clsx(
-                    'flex items-center space-x-0 sm:space-x-1 px-1.5 sm:px-2 py-1 rounded text-sm font-medium text-gray-600 transition-all duration-200 hover:bg-gray-100 hover:text-gray-800',
-                    showReplyForm && 'bg-gray-100 text-gray-800'
+                    'flex items-center space-x-0 sm:space-x-1 px-1.5 sm:px-2 py-1 rounded text-sm font-medium transition-all duration-200',
+                    showReplyForm && ''
                   )}
+                  style={{ color: 'var(--wc-text-secondary)', background: showReplyForm ? 'var(--wc-bg-secondary)' : 'transparent' }}
                 >
                   <Reply class="h-4 w-4" />
                   <span class="hidden sm:inline">回复</span>
                 </button>
               </div>
-
               {/* 展开/收起按钮 */}
               {totalReplies > 0 && (
                 <button
@@ -220,14 +217,14 @@ export function CommentItem({ comment, onVote, onReply, depth = 0 }: CommentItem
                   aria-label={isExpanded ? '收起回复' : `查看 ${totalReplies} 条回复`}
                   title={isExpanded ? '收起回复' : `查看 ${totalReplies} 条回复`}
                   class={clsx(
-                    "flex items-center space-x-0 sm:space-x-1 px-1.5 sm:px-2 py-1 rounded text-sm font-medium text-gray-500 transition-all duration-200 hover:bg-gray-100 hover:text-gray-700 transform hover:scale-105 active:scale-95",
-                    isAnimating && "pointer-events-none opacity-70 hover:bg-transparent",
-                    "focus:outline-none"
+                    'flex items-center space-x-0 sm:space-x-1 px-1.5 sm:px-2 py-1 rounded text-sm font-medium transform focus:outline-none',
+                    isAnimating && 'pointer-events-none opacity-70'
                   )}
+                  style={{ color: 'var(--wc-text-secondary)', background: 'var(--wc-bg-secondary)' }}
                 >
                   <div class={clsx(
-                    "transition-transform duration-300 ease-in-out",
-                    isExpanded ? "rotate-180" : "rotate-0"
+                    'transition-transform duration-300 ease-in-out',
+                    isExpanded ? 'rotate-180' : 'rotate-0'
                   )}>
                     <ChevronDown class="h-4 w-4" />
                   </div>
@@ -238,7 +235,6 @@ export function CommentItem({ comment, onVote, onReply, depth = 0 }: CommentItem
               )}
             </div>
           </div>
-
           {/* 回复表单 */}
           {showReplyForm && (
             <div class="mt-2 animate-fade-in">
@@ -253,7 +249,6 @@ export function CommentItem({ comment, onVote, onReply, depth = 0 }: CommentItem
               </div>
             </div>
           )}
-
           {/* 回复列表 */}
           {comment.replies.length > 0 && (
             <div class={clsx(

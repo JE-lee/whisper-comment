@@ -1,17 +1,27 @@
 import { Comments } from './components/Comments'
+import { useState } from 'preact/hooks'
 
 export function App() {
+  const [theme, setTheme] = useState<'light' | 'dark'>('light')
+  const toggleTheme = () => setTheme(t => t === 'light' ? 'dark' : 'light')
   return (
-    <div class="min-h-screen bg-gray-50">
+    <div class={`min-h-screen ${theme === 'dark' ? 'wc-dark' : ''}`} style={{ background: 'var(--wc-bg-secondary)' }}>
       {/* 顶部导航栏 */}
-      <header class="bg-white shadow-sm border-b border-gray-200">
+      <header class="bg-white dark:bg-[#232336] shadow-sm border-b border-gray-200 dark:border-[#27272a]">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div class="flex items-center justify-between h-16">
             <div class="flex items-center">
-              <h1 class="text-xl font-bold text-gray-900">Whisper Comment</h1>
+              <h1 class="text-xl font-bold text-gray-900 dark:text-gray-100">Whisper Comment</h1>
             </div>
-            <div class="text-sm text-gray-500">
-              现代化评论系统演示
+            <div class="flex items-center space-x-4">
+              <span class="text-sm text-gray-500 dark:text-gray-400">现代化评论系统演示</span>
+              <button
+                onClick={toggleTheme}
+                class="ml-4 px-3 py-1.5 rounded bg-gray-100 dark:bg-[#232336] border border-gray-200 dark:border-[#27272a] text-gray-700 dark:text-gray-200 hover:bg-gray-200 hover:dark:bg-[#18181b] transition-colors duration-200"
+                aria-label="切换主题"
+              >
+                {theme === 'dark' ? '🌙 暗色' : '☀️ 亮色'}
+              </button>
             </div>
           </div>
         </div>

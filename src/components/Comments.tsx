@@ -104,40 +104,38 @@ export function Comments({ className = '', title = '评论区' }: CommentsProps)
   }, [])
 
   return (
-    <div class={`max-w-4xl mx-auto ${className}`}>
+    <div class={`max-w-4xl mx-auto ${className}`} style={{ background: 'var(--wc-bg)', color: 'var(--wc-text)', borderColor: 'var(--wc-border)' }}>
       {/* 标题 */}
       <div class="mb-6">
-        <h2 class="text-2xl font-bold text-gray-900 mb-2">{title}</h2>
-        <div class="h-1 w-20 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full"></div>
+        <h2 class="text-2xl font-bold mb-2" style={{ color: 'var(--wc-text)' }}>{title}</h2>
+        <div class="h-1 w-20 rounded-full" style={{ background: 'linear-gradient(to right, var(--wc-primary), var(--wc-primary-dark))' }}></div>
       </div>
-
       {/* 错误提示 */}
       {error && (
-        <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center space-x-3">
-          <AlertCircle class="h-5 w-5 text-red-500 flex-shrink-0" />
+        <div class="mb-6 p-4 rounded-lg flex items-center space-x-3" style={{ background: 'var(--wc-danger-bg)', borderColor: 'var(--wc-danger-border)' }}>
+          <AlertCircle class="h-5 w-5 flex-shrink-0" style={{ color: 'var(--wc-danger)' }} />
           <div>
-            <p class="text-red-700 font-medium">{error}</p>
+            <p class="font-medium" style={{ color: 'var(--wc-danger)' }}>{error}</p>
             <button
               onClick={loadComments}
-              class="text-red-600 hover:text-red-800 text-sm underline mt-1"
+              class="text-sm underline mt-1"
+              style={{ color: 'var(--wc-danger)', textDecorationColor: 'var(--wc-danger)' }}
             >
               重新加载
             </button>
           </div>
         </div>
       )}
-
       {/* 评论表单 */}
       <div class="mb-6">
         <CommentForm onSubmit={handleCreateComment} />
       </div>
-
       {/* 评论列表 */}
       <div>
         {loading && !error ? (
           <div class="flex items-center justify-center py-12">
-            <Loader2 class="h-8 w-8 animate-spin text-blue-600 mr-3" />
-            <span class="text-gray-600">加载评论中...</span>
+            <Loader2 class="h-8 w-8 animate-spin mr-3" style={{ color: 'var(--wc-primary)' }} />
+            <span style={{ color: 'var(--wc-text-secondary)' }}>加载评论中...</span>
           </div>
         ) : (
           <CommentList

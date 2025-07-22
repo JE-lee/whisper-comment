@@ -16,22 +16,22 @@ export function CommentList({ comments, loading, onVote, onReply }: CommentListP
       <div class="space-y-4">
         {/* 加载骨架屏 */}
         {[1, 2, 3].map((i) => (
-          <div key={i} class="bg-white rounded-lg border border-gray-200 p-4 animate-pulse">
+          <div key={i} class="rounded-lg border p-4 animate-pulse" style={{ background: 'var(--wc-bg)', borderColor: 'var(--wc-border)' }}>
             <div class="flex items-center space-x-2 mb-3">
-              <div class="w-8 h-8 bg-gray-300 rounded-full"></div>
+              <div class="w-8 h-8 rounded-full" style={{ background: 'var(--wc-bg-secondary)' }}></div>
               <div class="flex-1">
-                <div class="h-4 bg-gray-300 rounded w-24 mb-1"></div>
-                <div class="h-3 bg-gray-300 rounded w-16"></div>
+                <div class="h-4 rounded w-24 mb-1" style={{ background: 'var(--wc-bg-secondary)' }}></div>
+                <div class="h-3 rounded w-16" style={{ background: 'var(--wc-bg-secondary)' }}></div>
               </div>
             </div>
             <div class="space-y-2 mb-4">
-              <div class="h-4 bg-gray-300 rounded"></div>
-              <div class="h-4 bg-gray-300 rounded w-3/4"></div>
+              <div class="h-4 rounded" style={{ background: 'var(--wc-bg-secondary)' }}></div>
+              <div class="h-4 rounded w-3/4" style={{ background: 'var(--wc-bg-secondary)' }}></div>
             </div>
             <div class="flex items-center space-x-4">
-              <div class="h-8 bg-gray-300 rounded w-16"></div>
-              <div class="h-8 bg-gray-300 rounded w-16"></div>
-              <div class="h-8 bg-gray-300 rounded w-16"></div>
+              <div class="h-8 rounded w-16" style={{ background: 'var(--wc-bg-secondary)' }}></div>
+              <div class="h-8 rounded w-16" style={{ background: 'var(--wc-bg-secondary)' }}></div>
+              <div class="h-8 rounded w-16" style={{ background: 'var(--wc-bg-secondary)' }}></div>
             </div>
           </div>
         ))}
@@ -42,9 +42,9 @@ export function CommentList({ comments, loading, onVote, onReply }: CommentListP
   if (comments.length === 0) {
     return (
       <div class="text-center py-12">
-        <MessageCircle class="mx-auto h-12 w-12 text-gray-400 mb-4" />
-        <h3 class="text-lg font-medium text-gray-900 mb-2">还没有评论</h3>
-        <p class="text-gray-500">成为第一个发表评论的人吧！</p>
+        <MessageCircle class="mx-auto h-12 w-12 mb-4" style={{ color: 'var(--wc-text-secondary)' }} />
+        <h3 class="text-lg font-medium mb-2" style={{ color: 'var(--wc-text)' }}>还没有评论</h3>
+        <p style={{ color: 'var(--wc-text-secondary)' }}>成为第一个发表评论的人吧！</p>
       </div>
     )
   }
@@ -53,8 +53,8 @@ export function CommentList({ comments, loading, onVote, onReply }: CommentListP
     <div class="space-y-4">
       {/* 评论统计 */}
       <div class="flex items-center space-x-2">
-        <MessageCircle class="h-5 w-5 text-gray-600" />
-        <span class="text-lg font-medium text-gray-900">
+        <MessageCircle class="h-5 w-5" style={{ color: 'var(--wc-text-secondary)' }} />
+        <span class="text-lg font-medium" style={{ color: 'var(--wc-text)' }}>
           {comments.length} 条评论
         </span>
       </div>
