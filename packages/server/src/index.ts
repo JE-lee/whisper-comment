@@ -1,4 +1,5 @@
 import Fastify, { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify'
+import { prisma } from './lib/database.js'
 
 // 创建Fastify实例
 const fastify: FastifyInstance = Fastify({
@@ -7,16 +8,49 @@ const fastify: FastifyInstance = Fastify({
 
 // 声明路由
 fastify.get('/', async (request: FastifyRequest, reply: FastifyReply) => {
-  return { hello: 'world', service: 'whisper-comment-server' }
+  return { hello: 'world', service: 'whisper-comment-server', message: 'WhisperComment Server is running!' }
 })
 
 // 健康检查端点
 fastify.get('/health', async (request: FastifyRequest, reply: FastifyReply) => {
-  return { 
-    status: 'ok', 
-    timestamp: new Date().toISOString(),
-    service: 'whisper-comment-server',
-    version: '1.0.0'
+  try {
+    // 检查数据库连接
+    await prisma.$queryRaw`SELECT 1`
+    return { 
+      status: 'ok', 
+      timestamp: new Date().toISOString(),
+      service: 'whisper-comment-server',
+      version: '1.0.0',
+      database: 'connected'
+    }
+  } catch (error) {
+    reply.code(503)
+    return { 
+      status: 'error', 
+      timestamp: new Date().toISOString(),
+      service: 'whisper-comment-server',
+      version: '1.0.0',
+      database: 'disconnected',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    }
+  }
+})
+
+// Database info endpoint (for development)
+fastify.get('/db-info', async (request: FastifyRequest, reply: FastifyReply) => {
+  try {
+    const result = await prisma.$queryRaw`SELECT version()` as Array<{ version: string }>
+    return {
+      database: 'PostgreSQL',
+      version: result[0]?.version || 'Unknown',
+      prisma_version: '6.12.0'
+    }
+  } catch (error) {
+    reply.code(500)
+    return {
+      error: 'Failed to get database info',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    }
   }
 })
 

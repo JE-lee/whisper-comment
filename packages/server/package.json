@@ -11,7 +11,8 @@
     "start:dev": "pnpm run build && pnpm run start",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
-    "prisma:studio": "prisma studio"
+    "prisma:studio": "prisma studio",
+    "postinstall": "pnpm run prisma:generate"
   },
   "keywords": [
     "fastify",

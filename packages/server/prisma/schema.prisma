@@ -1,0 +1,70 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// 存储客户网站信息
+model Site {
+  siteId    String   @id @default(uuid()) @map("site_id") @db.Uuid
+  ownerId   String   @map("owner_id") @db.Uuid
+  domain    String   @unique @db.VarChar(255)
+  apiKey    String   @unique @map("api_key") @db.VarChar(64)
+  settings  Json?    // 存储外观定制、反垃圾设置等
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  // 关联关系
+  comments Comment[]
+
+  @@map("sites")
+}
+
+// 存储评论信息
+model Comment {
+  commentId      String   @id @default(uuid()) @map("comment_id") @db.Uuid
+  siteId         String   @map("site_id") @db.Uuid
+  pageIdentifier String   @map("page_identifier") @db.Text
+  parentId       String?  @map("parent_id") @db.Uuid
+  authorToken    String   @map("author_token") @db.Text
+  authorNickname String   @map("author_nickname") @db.VarChar(50)
+  content        String   @db.Text
+  status         Int      @default(0) @db.SmallInt // 0: pending, 1: approved, 2: rejected, 3: spam
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  // 关联关系
+  site   Site      @relation(fields: [siteId], references: [siteId])
+  parent Comment?  @relation("CommentReplies", fields: [parentId], references: [commentId])
+  replies Comment[] @relation("CommentReplies")
+
+  // 索引
+  @@index([siteId, pageIdentifier], map: "idx_comments_page_identifier")
+  @@index([authorToken], map: "idx_comments_author_token")
+  @@map("comments")
+}
+
+// 存储浏览器推送订阅信息
+model PushSubscription {
+  subscriptionId Int      @id @default(autoincrement()) @map("subscription_id")
+  authorToken    String   @map("author_token") @db.Text
+  endpoint       String   @unique @db.Text
+  keys           Json     // 存储p256dh和auth密钥
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  @@map("push_subscriptions")
+}
+
+// 存储DID身份与匿名身份的关联
+model DidAssociation {
+  authorToken String   @id @map("author_token") @db.Text
+  didAddress  String   @unique @map("did_address") @db.VarChar(255)
+  didType     String   @map("did_type") @db.VarChar(20) // e.g., 'eip155' for Ethereum
+  linkedAt    DateTime @default(now()) @map("linked_at") @db.Timestamptz
+
+  @@map("did_associations")
+}
