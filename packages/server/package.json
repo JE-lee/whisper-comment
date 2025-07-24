@@ -2,11 +2,16 @@
   "name": "@whisper-comment/server",
   "version": "1.0.0",
   "description": "Backend server for whisper-comment",
-  "type": "module",
-  "main": "src/index.js",
+
+  "main": "dist/index.js",
   "scripts": {
-    "dev": "node --watch src/index.js",
-    "start": "node src/index.js"
+    "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "start:dev": "pnpm run build && pnpm run start",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:studio": "prisma studio"
   },
   "keywords": [
     "fastify",
@@ -16,6 +21,12 @@
   "author": "Your Name",
   "license": "MIT",
   "dependencies": {
-    "fastify": "^4.28.1"
+    "@prisma/client": "^6.12.0",
+    "@types/node": "^24.1.0",
+    "fastify": "^4.28.1",
+    "prisma": "^6.12.0",
+    "ts-node": "^10.9.2",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "~5.8.3"
   }
 }
