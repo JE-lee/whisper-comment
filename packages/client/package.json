@@ -1,0 +1,44 @@
+{
+  "name": "@whisper-comment/client",
+  "version": "1.0.0",
+  "description": "A modern comment component built with Preact and TwindCSS",
+  "type": "module",
+  "main": "dist/whisper-comment.umd.js",
+  "module": "dist/whisper-comment.es.js",
+  "exports": {
+    ".": {
+      "import": "./dist/whisper-comment.es.js",
+      "require": "./dist/whisper-comment.umd.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "build:lib": "vite build",
+    "preview": "vite preview"
+  },
+  "keywords": [
+    "comment",
+    "preact",
+    "twindcss",
+    "component",
+    "ui"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "clsx": "^2.1.1",
+    "preact": "^10.26.9"
+  },
+  "devDependencies": {
+    "@preact/preset-vite": "^2.10.2",
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.17",
+    "typescript": "~5.8.3",
+    "vite": "^7.0.4"
+  }
+}

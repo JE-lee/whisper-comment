@@ -1,46 +1,27 @@
 {
-  "name": "whisper-comment",
+  "name": "whisper-comment-monorepo",
   "version": "1.0.0",
-  "description": "A modern comment component built with Preact and TwindCSS",
+  "description": "Monorepo for whisper-comment project with client and server",
+  "private": true,
   "type": "module",
-  "main": "dist/whisper-comment.umd.js",
-  "module": "dist/whisper-comment.es.js",
-  "exports": {
-    ".": {
-      "import": "./dist/whisper-comment.es.js",
-      "require": "./dist/whisper-comment.umd.js"
-    }
-  },
-  "files": [
-    "dist"
-  ],
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
-    "build:lib": "vite build",
-    "preview": "vite preview"
+    "dev": "pnpm run --parallel dev",
+    "dev:client": "pnpm --filter @whisper-comment/client dev",
+    "dev:server": "pnpm --filter @whisper-comment/server dev",
+    "build": "pnpm run --recursive build",
+    "build:client": "pnpm --filter @whisper-comment/client build",
+    "install:all": "pnpm install"
   },
   "keywords": [
+    "monorepo",
     "comment",
     "preact",
-    "twindcss",
-    "component",
-    "ui"
+    "fastify",
+    "fullstack"
   ],
   "author": "Your Name",
   "license": "MIT",
-  "dependencies": {
-    "clsx": "^2.1.1",
-    "preact": "^10.26.9"
-  },
-  "devDependencies": {
-    "@preact/preset-vite": "^2.10.2",
-    "autoprefixer": "^10.4.21",
-    "postcss": "^8.5.6",
-    "tailwindcss": "^3.4.17",
-    "typescript": "~5.8.3",
-    "vite": "^7.0.4"
-  },
+  "devDependencies": {},
   "volta": {
     "node": "22.16.0",
     "pnpm": "10.13.1"
