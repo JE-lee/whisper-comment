@@ -1,5 +1,5 @@
 import Fastify, { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify'
-import { prisma } from './lib/database.js'
+import { prisma } from './lib/database'
 
 // 创建Fastify实例
 const fastify: FastifyInstance = Fastify({

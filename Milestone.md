@@ -6,10 +6,10 @@
 
 *   **任务 0.1: 服务端框架搭建**
     *   **描述**: 在 `packages/server` 中，安装 Fastify, TypeScript, ts-node-dev, 和 Prisma 等核心依赖。
-    *   **状态**: `未开始`
+    *   **状态**: `已完成`
 *   **任务 0.2: 数据库模式初始化**
     *   **描述**: 根据技术设计文档，在 `packages/server/prisma/` 目录下创建 `schema.prisma` 文件，并定义 `sites`, `comments`, `push_subscriptions`, `did_associations` 等数据模型。
-    *   **状态**: `未开始`
+    *   **状态**: `已完成`
 *   **任务 0.3: 数据库与缓存服务连接**
     *   **描述**: 注册并配置 Neon (PostgreSQL) 和 Upstash (Redis) 的免费服务。将连接凭证作为环境变量（例如，在 `.env` 文件中）配置到 `server` 项目中。
     *   **状态**: `未开始`
