@@ -60,10 +60,10 @@ export function CommentList({ comments, loading, onVote, onReply }: CommentListP
       </div>
 
       {/* 评论列表 */}
-      <div class="space-y-4">
+      <div class="space-y-2">
         {comments.map((comment, index) => (
           <div key={comment.id} class={clsx(
-            index > 0 && 'pt-4 border-t border-gray-100'
+            index > 0 && 'pt-2 border-t border-gray-100'
           )}>
             <CommentItem
               comment={comment}
