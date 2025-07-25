@@ -1,11 +1,20 @@
 import { config } from './config';
 import Fastify, { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { prisma } from './lib/database';
+import { commentRoutes } from './routes/comment.routes';
 
 // 创建Fastify实例
 const fastify: FastifyInstance = Fastify({
   logger: true,
 });
+
+// 注册 CORS 插件
+fastify.register(require('@fastify/cors'), {
+  origin: true, // 允许所有来源，生产环境应该配置具体域名
+});
+
+// 注册路由
+fastify.register(commentRoutes);
 
 // 声明路由
 fastify.get('/', async (request: FastifyRequest, reply: FastifyReply) => {
@@ -64,6 +73,7 @@ const start = async (): Promise<void> => {
 
     await fastify.listen({ port, host });
     console.log(`🚀 WhisperComment Server is running on http://${host}:${port}`);
+    console.log(`📚 API Documentation: http://${host}:${port}/documentation`);
   } catch (err) {
     fastify.log.error(err);
     process.exit(1);
