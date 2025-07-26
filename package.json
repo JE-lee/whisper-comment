@@ -10,7 +10,10 @@
     "dev:server": "pnpm --filter @whisper-comment/server dev",
     "build": "pnpm run --recursive build",
     "build:client": "pnpm --filter @whisper-comment/client build",
-    "install:all": "pnpm install"
+    "install:all": "pnpm install",
+    "lint": "pnpm run --recursive lint",
+    "lint:fix": "pnpm run --recursive lint:fix",
+    "check": "pnpm run lint && pnpm run build"
   },
   "keywords": [
     "monorepo",
@@ -21,7 +24,15 @@
   ],
   "author": "Your Name",
   "license": "MIT",
-  "devDependencies": {},
+  "devDependencies": {
+    "@eslint/js": "^9.32.0",
+    "@typescript-eslint/eslint-plugin": "^8.38.0",
+    "@typescript-eslint/parser": "^8.38.0",
+    "eslint": "^9.32.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-node": "^11.1.0"
+  },
   "volta": {
     "node": "22.16.0",
     "pnpm": "10.13.1"
