@@ -23,6 +23,9 @@ const commentResponseSchemaWithDefinitions = {
     authorNickname: { type: 'string' },
     content: { type: 'string' },
     status: { type: 'integer' },
+    likes: { type: 'integer' },
+    dislikes: { type: 'integer' },
+    userAction: { type: 'string', enum: ['like', 'dislike'], nullable: true },
     createdAt: { type: 'string', format: 'date-time' },
     replies: {
       type: 'array',
@@ -36,6 +39,9 @@ const commentResponseSchemaWithDefinitions = {
           authorNickname: { type: 'string' },
           content: { type: 'string' },
           status: { type: 'integer' },
+          likes: { type: 'integer' },
+          dislikes: { type: 'integer' },
+          userAction: { type: 'string', enum: ['like', 'dislike'], nullable: true },
           createdAt: { type: 'string', format: 'date-time' },
           replies: { type: 'array', items: {} }, // 简化嵌套
         },

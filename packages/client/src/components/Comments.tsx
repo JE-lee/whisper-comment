@@ -53,31 +53,39 @@ export function Comments({ className = '', title = '评论区' }: CommentsProps)
   // 处理点赞/踩
   const handleVote = async (request: VoteRequest) => {
     try {
-      const updatedComment = await commentService.voteComment(request)
-      setComments(prevComments => 
-        updateCommentInList(prevComments, updatedComment)
-      )
-    } catch (err) {
-      console.error('投票失败:', err)
-      throw new Error('投票失败，请稍后重试')
+      const voteResult = await commentService.voteComment(request)
+      updateCommentVotes(voteResult)
+    } catch (_err) {
+      // 可以在这里添加错误提示
     }
   }
 
-  // 递归更新评论列表中的特定评论
-  const updateCommentInList = (comments: Comment[], updatedComment: Comment): Comment[] => {
-    return comments.map(comment => {
-      if (comment.id === updatedComment.id) {
-        return updatedComment
-      }
-      if (comment.replies.length > 0) {
-        return {
-          ...comment,
-          replies: updateCommentInList(comment.replies, updatedComment)
+  // 更新评论列表中的特定评论的投票信息
+  const updateCommentVotes = (voteResult: { commentId: string; likes: number; dislikes: number; userAction: string | null }): void => {
+    const updateComments = (comments: Comment[]): Comment[] => {
+      return comments.map(comment => {
+        if (comment.id === voteResult.commentId) {
+          return {
+            ...comment,
+            likes: voteResult.likes,
+            dislikes: voteResult.dislikes,
+            userAction: voteResult.userAction
+          }
         }
-      }
-      return comment
-    })
+        if (comment.replies && comment.replies.length > 0) {
+          return {
+            ...comment,
+            replies: updateComments(comment.replies)
+          }
+        }
+        return comment
+      })
+    }
+    
+    setComments(prevComments => updateComments(prevComments))
   }
+
+
 
   // 递归添加回复到评论列表
   const updateCommentsWithReply = (comments: Comment[], parentId: string, newReply: Comment): Comment[] => {
@@ -148,4 +156,4 @@ export function Comments({ className = '', title = '评论区' }: CommentsProps)
       </div>
     </div>
   )
-} 
+}

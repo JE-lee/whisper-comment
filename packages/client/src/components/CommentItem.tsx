@@ -45,7 +45,7 @@ export function CommentItem({ comment, onVote, onReply, depth = 0, parentAuthor 
         allReplies.push({ ...reply, parentAuthor: currentParentAuthor })
         if (reply.replies && reply.replies.length > 0) {
           // 递归时，当前回复的作者成为下一级的父级
-          collectReplies(reply.replies, reply.author)
+          collectReplies(reply.replies, reply.author || '匿名用户')
         }
       })
     }
@@ -139,14 +139,14 @@ export function CommentItem({ comment, onVote, onReply, depth = 0, parentAuthor 
                 'rounded-full flex items-center justify-center text-white text-xs font-medium flex-shrink-0',
                 depth === 0 ? 'w-7 h-7' : 'w-6 h-6'
               )} style={{ background: depth === 0 ? 'linear-gradient(135deg, var(--wc-primary), var(--wc-primary-dark))' : 'linear-gradient(135deg, #6b7280, #374151)' }}>
-                {comment.author.charAt(0)}
+                {comment.author?.charAt(0) || '?'}
               </div>
               <div class="flex-1 min-w-0">
                 <div class="flex items-center flex-wrap gap-x-2 gap-y-0.5">
                   <h4 class={clsx(
                     'font-medium text-left',
                     depth === 0 ? 'text-sm' : 'text-xs'
-                  )} style={{ color: 'var(--wc-text)' }}>{comment.author}</h4>
+                  )} style={{ color: 'var(--wc-text)' }}>{comment.author || '匿名用户'}</h4>
                   {/* 时间显示 - 移到同一行 */}
                   <div class="flex items-center space-x-1 text-xs" style={{ color: 'var(--wc-text-secondary)' }}>
                     <Clock class="h-2.5 w-2.5" />
@@ -280,7 +280,7 @@ export function CommentItem({ comment, onVote, onReply, depth = 0, parentAuthor 
                 <CommentForm
                   onSubmit={handleReplySubmit}
                   parentId={comment.id}
-                  placeholder={`回复 @${comment.author}...`}
+                  placeholder={`回复 @${comment.author || '匿名用户'}...`}
                   onCancel={() => setShowReplyForm(false)}
                   isReply={true}
                 />
@@ -354,7 +354,7 @@ export function CommentItem({ comment, onVote, onReply, depth = 0, parentAuthor 
                         )}
                         style={{ borderColor: 'var(--wc-bg-secondary)' }}
                       >
-                        {reply.author.charAt(0)}
+                        {reply.author?.charAt(0) || '?'}
                       </div>
                     ))}
                     {allRepliesWithParent.length > 3 && (
@@ -372,7 +372,7 @@ export function CommentItem({ comment, onVote, onReply, depth = 0, parentAuthor 
                   </div>
                   <div class="flex-1 text-left">
                     <span class="text-left">
-                      {allRepliesWithParent[0].author} 等 {totalReplies} 人参与了讨论
+                      {allRepliesWithParent[0].author || '匿名用户'} 等 {totalReplies} 人参与了讨论
                     </span>
                   </div>
                   <div class="transition-transform duration-200 hover:translate-x-1">

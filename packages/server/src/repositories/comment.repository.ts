@@ -1,5 +1,5 @@
 import { PrismaClient, Comment, Prisma } from '@prisma/client';
-import { CommentListQuery, CommentWithRelations, CreateCommentData, UpdateCommentData } from '../types/comment';
+import { CommentListQuery, CommentWithRelations, CreateCommentData, UpdateCommentData, VoteCommentData, VoteType } from '../types/comment';
 import { PaginationParams } from '../types/common';
 
 export class CommentRepository {
@@ -161,5 +161,62 @@ export class CommentRepository {
       },
       { 0: 0, 1: 0, 2: 0, 3: 0 } as Record<number, number>
     );
+  }
+
+  /**
+   * 对评论进行投票
+   * 简化版本：每次投票都直接增加计数，不检查重复投票
+   */
+  async voteComment(data: VoteCommentData): Promise<Comment> {
+    const { commentId, voteType } = data;
+
+    // 直接更新评论的投票计数，不检查重复投票
+    const updateData = voteType === VoteType.LIKE 
+      ? { likes: { increment: 1 } }
+      : { dislikes: { increment: 1 } };
+
+    return this.prisma.comment.update({
+      where: { commentId },
+      data: updateData,
+    });
+  }
+
+  /**
+   * 获取用户对评论的投票状态
+   */
+  async getUserVote(commentId: string, authorToken: string): Promise<VoteType | null> {
+    const vote = await this.prisma.commentVote.findUnique({
+      where: {
+        commentId_authorToken: {
+          commentId,
+          authorToken,
+        },
+      },
+    });
+
+    return vote ? (vote.voteType as VoteType) : null;
+  }
+
+  /**
+   * 批量获取用户对多个评论的投票状态
+   */
+  async getUserVotes(commentIds: string[], authorToken: string): Promise<Record<string, VoteType | null>> {
+    const votes = await this.prisma.commentVote.findMany({
+      where: {
+        commentId: { in: commentIds },
+        authorToken,
+      },
+    });
+
+    const voteMap: Record<string, VoteType | null> = {};
+    commentIds.forEach(id => {
+      voteMap[id] = null;
+    });
+
+    votes.forEach(vote => {
+      voteMap[vote.commentId] = vote.voteType as VoteType;
+    });
+
+    return voteMap;
   }
 }

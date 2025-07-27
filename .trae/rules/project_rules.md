@@ -5,4 +5,4 @@
 5. 项目技术栈：
    - 后端：Fastify + Prisma
    - 前端：Preact + Tailwind CSS
-   - 数据库： PostgreSQL
+   - 数据库： Neon + PostgreSQL, 必要的时候可以通过 Neon MCP 来获取操作数据库。

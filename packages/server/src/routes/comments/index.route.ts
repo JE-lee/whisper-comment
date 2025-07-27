@@ -10,6 +10,7 @@ import {
   createCommentSchema,
   moderateCommentsSchema,
 } from '../../schemas/comment';
+import { voteCommentSchema } from '../../schemas/vote';
 
 // 依赖注入：创建实例
 const commentRepository = new CommentRepository(prisma);
@@ -60,6 +61,12 @@ export async function commentRoutes(
       fastify.post('/moderate', {
         schema: moderateCommentsSchema,
         handler: commentController.moderateComments.bind(commentController),
+      });
+
+      // 对评论进行投票
+      fastify.post('/:commentId/vote', {
+        schema: voteCommentSchema,
+        handler: commentController.voteComment.bind(commentController),
       });
     },
     { prefix: '/api/comments' }

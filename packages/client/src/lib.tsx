@@ -20,7 +20,6 @@ declare global {
 function mount(selector: string, options: any = {}) {
   const element = document.querySelector(selector)
   if (!element) {
-    console.error(`Element with selector "${selector}" not found`)
     return
   }
 
@@ -76,4 +75,4 @@ window.WhisperComment = {
 }
 
 // 启动自动挂载
-initAutoMount() 
+initAutoMount()

@@ -1,5 +1,5 @@
 import { CommentRepository } from '../repositories/comment.repository';
-import { CommentListQuery, CommentResponse, CommentListResponse, CommentStatus, CreateCommentData } from '../types/comment';
+import { CommentListQuery, CommentResponse, CommentListResponse, CommentStatus, CreateCommentData, VoteCommentData, VoteResponse, VoteType } from '../types/comment';
 import { PaginationParams, PaginationInfo } from '../types/common';
 
 import { CommentWithRelations } from '../types/comment';
@@ -10,7 +10,7 @@ export class CommentService {
   /**
    * 获取评论列表
    */
-  async getCommentList(query: CommentListQuery & PaginationParams): Promise<CommentListResponse> {
+  async getCommentList(query: CommentListQuery & PaginationParams, authorToken?: string): Promise<CommentListResponse> {
     const { page = 1, limit = 20 } = query;
     
     // 验证分页参数
@@ -21,8 +21,15 @@ export class CommentService {
     // 从 Repository 获取数据
     const { comments, total } = await this.commentRepository.findMany(query);
 
+    // 获取用户投票状态（如果提供了 authorToken）
+    let userVotes: Record<string, VoteType | null> = {};
+    if (authorToken && comments.length > 0) {
+      const commentIds = this.getAllCommentIds(comments);
+      userVotes = await this.commentRepository.getUserVotes(commentIds, authorToken);
+    }
+
     // 转换为 API 响应格式
-    const responseComments = comments.map(comment => this.transformToResponse(comment));
+    const responseComments = comments.map(comment => this.transformToResponse(comment, userVotes));
 
     // 计算分页信息
     const pagination = this.calculatePagination(page, limit, total);
@@ -91,7 +98,7 @@ export class CommentService {
   /**
    * 将数据库模型转换为 API 响应格式
    */
-  private transformToResponse(comment: CommentWithRelations): CommentResponse {
+  private transformToResponse(comment: any, userVotes: Record<string, VoteType | null> = {}): CommentResponse {
     const result: CommentResponse = {
       commentId: comment.commentId,
       siteId: comment.siteId,
@@ -100,8 +107,11 @@ export class CommentService {
       authorNickname: comment.authorNickname,
       content: comment.content,
       status: comment.status as CommentStatus,
+      likes: comment.likes || 0,
+      dislikes: comment.dislikes || 0,
+      userAction: userVotes[comment.commentId] || null,
       createdAt: comment.createdAt,
-      replies: comment.replies ? comment.replies.map(reply => this.transformToResponse(reply)) : [],
+      replies: comment.replies ? comment.replies.map((reply: any) => this.transformToResponse(reply, userVotes)) : [],
     };
     
     // 强制确保replies字段存在
@@ -144,5 +154,46 @@ export class CommentService {
     // 这里可以添加内容过滤逻辑
     // 例如移除恶意脚本、敏感词汇等
     return content.trim();
+  }
+
+  /**
+   * 对评论进行投票
+   * 简化版本：不需要身份验证，每次投票都有效
+   */
+  async voteComment(data: VoteCommentData): Promise<VoteResponse> {
+    // 验证评论是否存在
+    const comment = await this.commentRepository.findById(data.commentId);
+    if (!comment) {
+      throw new Error('Comment not found');
+    }
+
+    // 执行投票操作
+    const updatedComment = await this.commentRepository.voteComment(data);
+
+    return {
+      commentId: updatedComment.commentId,
+      likes: updatedComment.likes || 0,
+      dislikes: updatedComment.dislikes || 0,
+      userAction: data.voteType, // 返回当前投票类型
+    };
+  }
+
+  /**
+   * 获取所有评论ID（包括回复）
+   */
+  private getAllCommentIds(comments: CommentWithRelations[]): string[] {
+    const ids: string[] = [];
+    
+    const collectIds = (commentList: any[]) => {
+      commentList.forEach((comment: any) => {
+        ids.push(comment.commentId);
+        if (comment.replies && comment.replies.length > 0) {
+          collectIds(comment.replies);
+        }
+      });
+    };
+    
+    collectIds(comments);
+    return ids;
   }
 }

@@ -35,12 +35,15 @@ model Comment {
   authorNickname String   @map("author_nickname") @db.VarChar(50)
   content        String   @db.Text
   status         Int      @default(0) @db.SmallInt // 0: pending, 1: approved, 2: rejected, 3: spam
+  likes          Int      @default(0) @db.Integer // 点赞数
+  dislikes       Int      @default(0) @db.Integer // 踩数
   createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
 
   // 关联关系
   site   Site      @relation(fields: [siteId], references: [siteId])
   parent Comment?  @relation("CommentReplies", fields: [parentId], references: [commentId])
   replies Comment[] @relation("CommentReplies")
+  votes  CommentVote[] // 投票记录
 
   // 索引
   @@index([siteId, pageIdentifier], map: "idx_comments_page_identifier")
@@ -67,4 +70,21 @@ model DidAssociation {
   linkedAt    DateTime @default(now()) @map("linked_at") @db.Timestamptz
 
   @@map("did_associations")
+}
+
+// 存储评论投票记录
+model CommentVote {
+  voteId      Int      @id @default(autoincrement()) @map("vote_id")
+  commentId   String   @map("comment_id") @db.Uuid
+  authorToken String   @map("author_token") @db.Text
+  voteType    String   @map("vote_type") @db.VarChar(10) // 'like' or 'dislike'
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  // 关联关系
+  comment Comment @relation(fields: [commentId], references: [commentId], onDelete: Cascade)
+
+  // 确保同一用户对同一评论只能投票一次
+  @@unique([commentId, authorToken], map: "unique_comment_author_vote")
+  @@index([authorToken], map: "idx_votes_author_token")
+  @@map("comment_votes")
 }

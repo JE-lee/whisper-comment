@@ -1,4 +1,4 @@
-import type { Comment, CreateCommentRequest } from '../types/comment'
+import type { Comment, CreateCommentRequest, VoteRequest } from '../types/comment'
 
 // API 基础配置
 const API_BASE_URL = 'http://localhost:3000/api'
@@ -22,6 +22,9 @@ interface ServerComment {
   content: string
   status: number
   createdAt: string
+  likes: number
+  dislikes: number
+  userAction: 'like' | 'dislike' | null
   replies?: ServerComment[]
 }
 
@@ -44,9 +47,9 @@ const transformServerComment = (serverComment: ServerComment): Comment => {
     content: serverComment.content,
     author: serverComment.authorNickname,
     timestamp: serverComment.createdAt,
-    likes: 0, // 暂时设为0，后续可以从服务端获取
-    dislikes: 0,
-    userAction: null,
+    likes: serverComment.likes,
+    dislikes: serverComment.dislikes,
+    userAction: serverComment.userAction,
     parentId: serverComment.parentId,
     replies: serverComment.replies ? serverComment.replies.map(transformServerComment) : []
   }
@@ -84,7 +87,8 @@ export const commentService = {
         pageIdentifier: DEFAULT_PAGE_IDENTIFIER,
         status: '0', // 获取待审核的评论（测试用）
         limit: '100', // 获取更多评论
-        parentId: '' // 只获取顶级评论（parentId为null的评论）
+        parentId: '', // 只获取顶级评论（parentId为null的评论）
+        authorToken: DEFAULT_AUTHOR_TOKEN // 传递用户token以获取投票状态
       })
       
       const response = await apiRequest<CommentListResponse>(`/comments?${params}`)
@@ -94,8 +98,7 @@ export const commentService = {
         .map(transformServerComment)
       
       return topLevelComments
-    } catch (error) {
-      console.error('获取评论失败:', error)
+    } catch (_error) {
       return []
     }
   },
@@ -118,17 +121,27 @@ export const commentService = {
       })
       
       return transformServerComment(response)
-    } catch (error) {
-      console.error('创建评论失败:', error)
+    } catch (_error) {
       throw new Error('创建评论失败，请稍后重试')
     }
   },
 
-  // 点赞/踩评论 (暂时保留mock实现，因为服务端还没有相关接口)
-  async voteComment(): Promise<Comment> {
-    // 这里暂时返回一个模拟的结果
-    // 实际应该调用服务端的投票API
-    console.warn('投票功能暂未实现服务端接口')
-    throw new Error('投票功能暂未实现')
+  // 点赞/踩评论
+  async voteComment(request: VoteRequest): Promise<{ commentId: string; likes: number; dislikes: number; userAction: string | null }> {
+    try {
+      const voteData = {
+        action: request.action
+        // 不再需要 authorToken
+      }
+      
+      const response = await apiRequest<{ commentId: string; likes: number; dislikes: number; userAction: string | null }>(`/comments/${request.commentId}/vote`, {
+        method: 'POST',
+        body: JSON.stringify(voteData)
+      })
+      
+      return response
+    } catch (_error) {
+      throw new Error('投票失败，请稍后重试')
+    }
   }
 }

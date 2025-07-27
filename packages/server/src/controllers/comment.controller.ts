@@ -1,7 +1,7 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { CommentService } from '../services/comment.service';
 import { ApiResponse } from '../types/common';
-import { CommentListResponse, CommentResponse } from '../types/comment';
+import { CommentListResponse, CommentResponse, VoteResponse, VoteType } from '../types/comment';
 import { handleError, createSuccessResponse, NotFoundError } from '../utils/errors';
 
 // 定义接口类型
@@ -40,6 +40,8 @@ interface CreateCommentInput {
   content: string;
 }
 
+
+
 export class CommentController {
   constructor(private commentService: CommentService) {}
 
@@ -62,7 +64,7 @@ export class CommentController {
       };
 
       // 调用服务层
-      const result = await this.commentService.getCommentList(query);
+      const result = await this.commentService.getCommentList(query, query.authorToken);
 
       const response = createSuccessResponse(result);
       return reply.code(200).send(response);
@@ -159,6 +161,33 @@ export class CommentController {
         updatedCount,
         message: `Successfully updated ${updatedCount} comments`,
       });
+      return reply.code(200).send(response);
+    } catch (error) {
+      return this.handleError(error, reply);
+    }
+  }
+
+  /**
+   * 对评论进行投票
+   * POST /api/comments/:commentId/vote
+   * 简化版本：不需要身份验证，任何人都可以投票
+   */
+  async voteComment(
+    request: FastifyRequest<{ Params: CommentIdParamInput; Body: { action: 'like' | 'dislike' } }>,
+    reply: FastifyReply
+  ): Promise<ApiResponse<VoteResponse>> {
+    try {
+      const { commentId } = request.params;
+      const { action } = request.body;
+
+      // 调用服务层
+      const result = await this.commentService.voteComment({
+        commentId,
+        authorToken: '', // 不再需要 authorToken
+        voteType: action as VoteType,
+      });
+
+      const response = createSuccessResponse(result);
       return reply.code(200).send(response);
     } catch (error) {
       return this.handleError(error, reply);

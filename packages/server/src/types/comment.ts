@@ -30,6 +30,9 @@ export interface CommentResponse {
   authorNickname: string;
   content: string;
   status: CommentStatus;
+  likes: number;
+  dislikes: number;
+  userAction: VoteType | null; // 当前用户的投票状态
   createdAt: Date;
   replies: CommentResponse[];
 }
@@ -75,4 +78,25 @@ export interface UpdateCommentData {
   authorNickname?: string;
   content?: string;
   status?: CommentStatus;
+}
+
+// 投票类型枚举
+export enum VoteType {
+  LIKE = 'like',
+  DISLIKE = 'dislike',
+}
+
+// 投票请求数据
+export interface VoteCommentData {
+  commentId: string;
+  authorToken: string;
+  voteType: VoteType;
+}
+
+// 投票响应数据
+export interface VoteResponse {
+  commentId: string;
+  likes: number;
+  dislikes: number;
+  userAction: VoteType | null;
 }
