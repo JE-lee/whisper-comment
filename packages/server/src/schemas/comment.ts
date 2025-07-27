@@ -12,27 +12,6 @@ import {
   sortRequestSchema,
 } from './shared';
 
-// 评论对象 Schema（递归定义）
-const commentResponseSchema: any = {
-  type: 'object',
-  properties: {
-    commentId: { type: 'string' },
-    siteId: { type: 'string' },
-    pageIdentifier: { type: 'string' },
-    parentId: { type: 'string', nullable: true },
-    authorNickname: { type: 'string' },
-    content: { type: 'string' },
-    status: { type: 'integer' },
-    createdAt: { type: 'string', format: 'date-time' },
-    replies: {
-      type: 'array',
-      items: {
-        $ref: '#/definitions/commentResponse'
-      }
-    },
-  },
-};
-
 // 为了支持递归引用，我们需要定义一个完整的schema
 const commentResponseSchemaWithDefinitions = {
   type: 'object',

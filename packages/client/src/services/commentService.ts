@@ -1,4 +1,4 @@
-import type { Comment, CreateCommentRequest, VoteRequest } from '../types/comment'
+import type { Comment, CreateCommentRequest } from '../types/comment'
 
 // API 基础配置
 const API_BASE_URL = 'http://localhost:3000/api'
@@ -125,7 +125,7 @@ export const commentService = {
   },
 
   // 点赞/踩评论 (暂时保留mock实现，因为服务端还没有相关接口)
-  async voteComment(request: VoteRequest): Promise<Comment> {
+  async voteComment(): Promise<Comment> {
     // 这里暂时返回一个模拟的结果
     // 实际应该调用服务端的投票API
     console.warn('投票功能暂未实现服务端接口')

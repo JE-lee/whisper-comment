@@ -3,8 +3,12 @@ import tseslint from '@typescript-eslint/eslint-plugin';
 import tsparser from '@typescript-eslint/parser';
 import reactPlugin from 'eslint-plugin-react';
 import reactHooksPlugin from 'eslint-plugin-react-hooks';
+import globals from 'globals';
 
 export default [
+  {
+    ignores: ['dist/**', 'node_modules/**', 'coverage/**'],
+  },
   js.configs.recommended,
   {
     files: ['**/*.{js,jsx,ts,tsx}'],
@@ -18,9 +22,7 @@ export default [
         },
       },
       globals: {
-        window: 'readonly',
-        document: 'readonly',
-        console: 'readonly',
+        ...globals.browser,
       },
     },
     plugins: {
@@ -36,7 +38,13 @@ export default [
     },
     rules: {
       // TypeScript 规则
-      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      'no-unused-vars': 'off',
+      '@typescript-eslint/no-unused-vars': ['error', { 
+        argsIgnorePattern: '^_',
+        varsIgnorePattern: '^_',
+        caughtErrorsIgnorePattern: '^_',
+        ignoreRestSiblings: true,
+      }],
       '@typescript-eslint/no-explicit-any': 'warn',
       
       // React/Preact 规则
@@ -56,6 +64,15 @@ export default [
       'no-debugger': 'error',
       'prefer-const': 'error',
       'no-var': 'error',
+      'no-undef': 'off',
+    },
+  },
+  {
+    files: ['src/**/*.{ts,tsx}'],
+    languageOptions: {
+      parserOptions: {
+        project: './tsconfig.json',
+      },
     },
   },
   {

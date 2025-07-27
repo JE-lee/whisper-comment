@@ -3,10 +3,12 @@ const tseslint = require('@typescript-eslint/eslint-plugin');
 const tsparser = require('@typescript-eslint/parser');
 
 module.exports = [
+  {
+    ignores: ['dist/**', 'node_modules/**', 'coverage/**'],
+  },
   js.configs.recommended,
   {
     files: ['**/*.{js,ts}'],
-    ignores: ['dist/**', 'node_modules/**', 'coverage/**'],
     languageOptions: {
       parser: tsparser,
       parserOptions: {
