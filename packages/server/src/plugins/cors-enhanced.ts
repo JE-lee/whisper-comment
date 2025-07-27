@@ -121,11 +121,19 @@ export async function developmentCorsPlugin(fastify: FastifyInstance) {
     allowedHeaders: '*',
     credentials: true,
     maxAge: 3600,
+    optionsSuccessStatus: 200,
   });
 
-  // 开发环境调试信息
-  fastify.addHook('onRequest', async (request, reply) => {
+  // 确保所有响应都包含CORS头
+  fastify.addHook('onSend', async (request, reply, payload) => {
+    const origin = request.headers.origin;
+    if (origin) {
+      reply.header('Access-Control-Allow-Origin', origin);
+      reply.header('Access-Control-Allow-Credentials', 'true');
+      reply.header('Vary', 'Origin');
+    }
     reply.header('X-Dev-CORS', 'permissive');
+    return payload;
   });
 }
 

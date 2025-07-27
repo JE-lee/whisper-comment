@@ -12,8 +12,8 @@ import {
   sortRequestSchema,
 } from './shared';
 
-// 评论对象 Schema
-const commentResponseSchema = {
+// 评论对象 Schema（递归定义）
+const commentResponseSchema: any = {
   type: 'object',
   properties: {
     commentId: { type: 'string' },
@@ -24,6 +24,44 @@ const commentResponseSchema = {
     content: { type: 'string' },
     status: { type: 'integer' },
     createdAt: { type: 'string', format: 'date-time' },
+    replies: {
+      type: 'array',
+      items: {
+        $ref: '#/definitions/commentResponse'
+      }
+    },
+  },
+};
+
+// 为了支持递归引用，我们需要定义一个完整的schema
+const commentResponseSchemaWithDefinitions = {
+  type: 'object',
+  properties: {
+    commentId: { type: 'string' },
+    siteId: { type: 'string' },
+    pageIdentifier: { type: 'string' },
+    parentId: { type: 'string', nullable: true },
+    authorNickname: { type: 'string' },
+    content: { type: 'string' },
+    status: { type: 'integer' },
+    createdAt: { type: 'string', format: 'date-time' },
+    replies: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          commentId: { type: 'string' },
+          siteId: { type: 'string' },
+          pageIdentifier: { type: 'string' },
+          parentId: { type: 'string', nullable: true },
+          authorNickname: { type: 'string' },
+          content: { type: 'string' },
+          status: { type: 'integer' },
+          createdAt: { type: 'string', format: 'date-time' },
+          replies: { type: 'array', items: {} }, // 简化嵌套
+        },
+      },
+    },
   },
 };
 
@@ -37,7 +75,13 @@ const commentListRequestSchema = {
     pageIdentifier: { type: 'string', description: '页面标识符' },
     status: { type: 'integer', enum: [0, 1, 2, 3], description: '评论状态' },
     authorToken: { type: 'string', description: '作者令牌' },
-    parentId: { ...uuidParamSchema, description: '父评论 ID' },
+    parentId: { 
+      oneOf: [
+        { ...uuidParamSchema },
+        { type: 'string', enum: [''] }
+      ],
+      description: '父评论 ID，空字符串表示查询顶级评论' 
+    },
     ...paginationRequestSchema,
     ...sortRequestSchema,
     sortBy: { type: 'string', enum: ['createdAt', 'status'], default: 'createdAt', description: '排序字段' },
@@ -60,6 +104,19 @@ const pageStatsRequestSchema = {
     pageIdentifier: { type: 'string', description: '页面标识符' },
   },
   required: ['siteId', 'pageIdentifier'],
+};
+
+const createCommentRequestSchema = {
+  type: 'object',
+  properties: {
+    siteId: { ...uuidParamSchema, description: '站点 ID' },
+    pageIdentifier: { type: 'string', description: '页面标识符' },
+    parentId: { ...uuidParamSchema, description: '父评论 ID（可选）' },
+    authorToken: { type: 'string', description: '作者令牌' },
+    authorNickname: { type: 'string', minLength: 1, maxLength: 50, description: '作者昵称' },
+    content: { type: 'string', minLength: 1, maxLength: 2000, description: '评论内容' },
+  },
+  required: ['siteId', 'pageIdentifier', 'authorToken', 'authorNickname', 'content'],
 };
 
 const moderateCommentsRequestSchema = {
@@ -95,7 +152,7 @@ export const getCommentListSchema = {
           properties: {
             comments: {
               type: 'array',
-              items: commentResponseSchema,
+              items: commentResponseSchemaWithDefinitions,
             },
             pagination: paginationResponseSchema,
           },
@@ -115,7 +172,7 @@ export const getCommentByIdSchema = {
       ...baseSuccessResponseSchema,
       properties: {
         ...baseSuccessResponseSchema.properties,
-        data: commentResponseSchema,
+        data: commentResponseSchemaWithDefinitions,
       },
     },
     404: baseErrorResponseSchema,
@@ -127,6 +184,23 @@ export const getPageStatsSchema = {
   description: '获取页面评论统计',
   tags: ['Comments'],
   querystring: pageStatsRequestSchema,
+};
+
+// 创建评论的 Schema
+export const createCommentSchema = {
+  description: '创建新评论',
+  tags: ['Comments'],
+  body: createCommentRequestSchema,
+  response: {
+    201: {
+      ...baseSuccessResponseSchema,
+      properties: {
+        ...baseSuccessResponseSchema.properties,
+        data: commentResponseSchemaWithDefinitions,
+      },
+    },
+    400: baseErrorResponseSchema,
+  },
 };
 
 // 批量审核评论的 Schema

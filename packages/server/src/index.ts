@@ -88,6 +88,12 @@ fastify.decorateReply('paginated', function(items: any[], pagination: any, statu
 
 // 注册插件和路由
 fastify.register(async function (fastify) {
+  // 1. 首先注册CORS插件（必须最先注册）
+  if (config.isDevelopment) {
+    await fastify.register(developmentCorsPlugin);
+  } else {
+    await fastify.register(corsEnhancedPlugin);
+  }
   // 响应格式化装饰器已在主实例上注册，跳过插件注册
   
   // 2. 安全头插件
@@ -95,13 +101,6 @@ fastify.register(async function (fastify) {
     await fastify.register(developmentSecurityHeadersPlugin);
   } else {
     await fastify.register(securityHeadersPlugin);
-  }
-
-  // 3. CORS插件
-  if (config.isDevelopment) {
-    await fastify.register(developmentCorsPlugin);
-  } else {
-    await fastify.register(corsEnhancedPlugin);
   }
 
   // 4. 请求ID和追踪插件

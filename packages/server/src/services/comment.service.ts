@@ -1,9 +1,8 @@
-import { Comment } from '@prisma/client';
 import { CommentRepository } from '../repositories/comment.repository';
-import { CommentListQuery, CommentResponse, CommentListResponse, CommentStatus } from '../types/comment';
+import { CommentListQuery, CommentResponse, CommentListResponse, CommentStatus, CreateCommentData } from '../types/comment';
 import { PaginationParams, PaginationInfo } from '../types/common';
 
-type CommentWithPossibleReplies = Comment & { replies?: CommentWithPossibleReplies[] };
+import { CommentWithRelations } from '../types/comment';
 
 export class CommentService {
   constructor(private commentRepository: CommentRepository) {}
@@ -43,6 +42,26 @@ export class CommentService {
   }
 
   /**
+   * 创建新评论
+   */
+  async createComment(data: CreateCommentData): Promise<CommentResponse> {
+    // 内容过滤
+    const sanitizedContent = this.sanitizeContent(data.content);
+    
+    // 创建评论数据
+    const commentData = {
+      ...data,
+      content: sanitizedContent,
+    };
+
+    // 调用 Repository 创建评论
+    const comment = await this.commentRepository.create(commentData);
+
+    // 转换为 API 响应格式
+    return this.transformToResponse(comment);
+  }
+
+  /**
    * 获取页面评论统计
    */
   async getPageStats(siteId: string, pageIdentifier: string) {
@@ -72,8 +91,8 @@ export class CommentService {
   /**
    * 将数据库模型转换为 API 响应格式
    */
-  private transformToResponse(comment: CommentWithPossibleReplies): CommentResponse {
-    return {
+  private transformToResponse(comment: CommentWithRelations): CommentResponse {
+    const result: CommentResponse = {
       commentId: comment.commentId,
       siteId: comment.siteId,
       pageIdentifier: comment.pageIdentifier,
@@ -82,8 +101,15 @@ export class CommentService {
       content: comment.content,
       status: comment.status as CommentStatus,
       createdAt: comment.createdAt,
-      replies: comment.replies?.map(reply => this.transformToResponse(reply)),
+      replies: comment.replies ? comment.replies.map(reply => this.transformToResponse(reply)) : [],
     };
+    
+    // 强制确保replies字段存在
+    if (!Object.prototype.hasOwnProperty.call(result, 'replies')) {
+      result.replies = [];
+    }
+    
+    return result;
   }
 
   /**

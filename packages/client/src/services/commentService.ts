@@ -1,201 +1,134 @@
 import type { Comment, CreateCommentRequest, VoteRequest } from '../types/comment'
 
-// Mock 数据存储
-let mockComments: Comment[] = [
-  {
-    id: '1',
-    content: '这是一个很棒的功能！期待后续的更新。',
-    author: '张小明',
-    timestamp: '2024-01-15T10:30:00Z',
-    likes: 12,
-    dislikes: 2,
-    userAction: null,
-    parentId: null,
-    replies: [
-      {
-        id: '2',
-        content: '我也这么认为，界面设计得很不错。',
-        author: '李华',
-        timestamp: '2024-01-15T11:15:00Z',
-        likes: 5,
-        dislikes: 0,
-        userAction: null,
-        parentId: '1',
-        replies: [
-          {
-            id: '4',
-            content: '确实，特别是动画效果很流畅。',
-            author: '赵六',
-            timestamp: '2024-01-15T12:00:00Z',
-            likes: 2,
-            dislikes: 0,
-            userAction: null,
-            parentId: '2',
-            replies: [
-              {
-                id: '5',
-                content: '同意！这种现代化的设计很适合年轻用户。',
-                author: '钱七',
-                timestamp: '2024-01-15T12:30:00Z',
-                likes: 1,
-                dislikes: 0,
-                userAction: null,
-                parentId: '4',
-                replies: []
-              }
-            ]
-          }
-        ]
-      },
-      {
-        id: '6',
-        content: '希望能加上暗色主题的支持。',
-        author: '孙八',
-        timestamp: '2024-01-15T13:00:00Z',
-        likes: 8,
-        dislikes: 1,
-        userAction: null,
-        parentId: '1',
-        replies: []
-      }
-    ]
-  },
-  {
-    id: '3',
-    content: '有一个小 bug，在手机端显示不太正常。',
-    author: '王二狗',
-    timestamp: '2024-01-15T12:45:00Z',
-    likes: 3,
-    dislikes: 1,
-    userAction: null,
-    parentId: null,
-    replies: [
-      {
-        id: '7',
-        content: '我在 iPhone 上测试了，确实有这个问题。',
-        author: '周九',
-        timestamp: '2024-01-15T13:30:00Z',
-        likes: 2,
-        dislikes: 0,
-        userAction: null,
-        parentId: '3',
-        replies: []
-      }
-    ]
-  },
-  {
-    id: '8',
-    content: '整体体验很好，加载速度也很快！👍',
-    author: '吴十',
-    timestamp: '2024-01-15T14:00:00Z',
-    likes: 15,
+// API 基础配置
+const API_BASE_URL = 'http://localhost:3000/api'
+const DEFAULT_SITE_ID = '550e8400-e29b-41d4-a716-446655440000' // 使用有效的UUID格式
+const DEFAULT_PAGE_IDENTIFIER = 'test-page'
+const DEFAULT_AUTHOR_TOKEN = 'anonymous-user-token'
+
+// API 响应类型
+interface ApiResponse<T> {
+  success: boolean
+  data: T
+  message?: string
+}
+
+interface ServerComment {
+  commentId: string
+  siteId: string
+  pageIdentifier: string
+  parentId: string | null
+  authorNickname: string
+  content: string
+  status: number
+  createdAt: string
+  replies?: ServerComment[]
+}
+
+interface CommentListResponse {
+  comments: ServerComment[]
+  pagination: {
+    page: number
+    limit: number
+    total: number
+    totalPages: number
+    hasNext: boolean
+    hasPrev: boolean
+  }
+}
+
+// 转换服务端评论数据为客户端格式
+const transformServerComment = (serverComment: ServerComment): Comment => {
+  return {
+    id: serverComment.commentId,
+    content: serverComment.content,
+    author: serverComment.authorNickname,
+    timestamp: serverComment.createdAt,
+    likes: 0, // 暂时设为0，后续可以从服务端获取
     dislikes: 0,
     userAction: null,
-    parentId: null,
-    replies: []
+    parentId: serverComment.parentId,
+    replies: serverComment.replies ? serverComment.replies.map(transformServerComment) : []
   }
-]
-
-// 生成唯一 ID
-const generateId = (): string => {
-  return Math.random().toString(36).substr(2, 9)
 }
 
-// 递归查找评论
-const findCommentById = (comments: Comment[], id: string): Comment | null => {
-  for (const comment of comments) {
-    if (comment.id === id) return comment
-    const found = findCommentById(comment.replies, id)
-    if (found) return found
-  }
-  return null
-}
+// HTTP 请求工具函数
+const apiRequest = async <T>(url: string, options: RequestInit = {}): Promise<T> => {
+  const response = await fetch(`${API_BASE_URL}${url}`, {
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers
+    },
+    ...options
+  })
 
-// 递归添加回复
-const addReplyToComment = (comments: Comment[], parentId: string, newComment: Comment): boolean => {
-  for (const comment of comments) {
-    if (comment.id === parentId) {
-      comment.replies.push(newComment)
-      return true
-    }
-    if (addReplyToComment(comment.replies, parentId, newComment)) {
-      return true
-    }
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`)
   }
-  return false
-}
 
-// 模拟网络延迟
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+  const result: ApiResponse<T> = await response.json()
+  
+  if (!result.success) {
+    throw new Error(result.message || 'API request failed')
+  }
+
+  return result.data
+}
 
 export const commentService = {
   // 获取所有评论
   async getComments(): Promise<Comment[]> {
-    await delay(300)
-    return [...mockComments]
+    try {
+      const params = new URLSearchParams({
+        siteId: DEFAULT_SITE_ID,
+        pageIdentifier: DEFAULT_PAGE_IDENTIFIER,
+        status: '0', // 获取待审核的评论（测试用）
+        limit: '100', // 获取更多评论
+        parentId: '' // 只获取顶级评论（parentId为null的评论）
+      })
+      
+      const response = await apiRequest<CommentListResponse>(`/comments?${params}`)
+      // 只返回顶级评论，回复已经嵌套在replies字段中
+      const topLevelComments = response.comments
+        .filter(comment => comment.parentId === null)
+        .map(transformServerComment)
+      
+      return topLevelComments
+    } catch (error) {
+      console.error('获取评论失败:', error)
+      return []
+    }
   },
 
   // 创建新评论
   async createComment(request: CreateCommentRequest): Promise<Comment> {
-    await delay(500)
-    
-    const newComment: Comment = {
-      id: generateId(),
-      content: request.content,
-      author: request.author,
-      timestamp: new Date().toISOString(),
-      likes: 0,
-      dislikes: 0,
-      userAction: null,
-      parentId: request.parentId || null,
-      replies: []
+    try {
+      const createData = {
+        siteId: DEFAULT_SITE_ID,
+        pageIdentifier: DEFAULT_PAGE_IDENTIFIER,
+        parentId: request.parentId || undefined,
+        authorToken: DEFAULT_AUTHOR_TOKEN,
+        authorNickname: request.author,
+        content: request.content
+      }
+      
+      const response = await apiRequest<ServerComment>('/comments', {
+        method: 'POST',
+        body: JSON.stringify(createData)
+      })
+      
+      return transformServerComment(response)
+    } catch (error) {
+      console.error('创建评论失败:', error)
+      throw new Error('创建评论失败，请稍后重试')
     }
-
-    if (request.parentId) {
-      // 这是一个回复
-      addReplyToComment(mockComments, request.parentId, newComment)
-    } else {
-      // 这是一个顶级评论
-      mockComments.push(newComment)
-    }
-
-    return newComment
   },
 
-  // 点赞/踩评论
+  // 点赞/踩评论 (暂时保留mock实现，因为服务端还没有相关接口)
   async voteComment(request: VoteRequest): Promise<Comment> {
-    await delay(200)
-    
-    const comment = findCommentById(mockComments, request.commentId)
-    if (!comment) {
-      throw new Error('评论不存在')
-    }
-
-    // 处理投票逻辑
-    if (comment.userAction === request.action) {
-      // 取消投票
-      if (request.action === 'like') {
-        comment.likes--
-      } else {
-        comment.dislikes--
-      }
-      comment.userAction = null
-    } else {
-      // 切换或新增投票
-      if (comment.userAction === 'like') {
-        comment.likes--
-      } else if (comment.userAction === 'dislike') {
-        comment.dislikes--
-      }
-
-      if (request.action === 'like') {
-        comment.likes++
-      } else {
-        comment.dislikes++
-      }
-      comment.userAction = request.action
-    }
-
-    return comment
+    // 这里暂时返回一个模拟的结果
+    // 实际应该调用服务端的投票API
+    console.warn('投票功能暂未实现服务端接口')
+    throw new Error('投票功能暂未实现')
   }
-} 
+}

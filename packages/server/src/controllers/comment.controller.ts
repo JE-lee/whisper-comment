@@ -31,6 +31,15 @@ interface ModerateCommentsInput {
   status: number;
 }
 
+interface CreateCommentInput {
+  siteId: string;
+  pageIdentifier: string;
+  parentId?: string;
+  authorToken: string;
+  authorNickname: string;
+  content: string;
+}
+
 export class CommentController {
   constructor(private commentService: CommentService) {}
 
@@ -103,6 +112,27 @@ export class CommentController {
 
       const response = createSuccessResponse(stats);
       return reply.code(200).send(response);
+    } catch (error) {
+      return this.handleError(error, reply);
+    }
+  }
+
+  /**
+   * 创建新评论
+   * POST /api/comments
+   */
+  async createComment(
+    request: FastifyRequest<{ Body: CreateCommentInput }>,
+    reply: FastifyReply
+  ): Promise<ApiResponse<CommentResponse>> {
+    try {
+      const commentData = request.body;
+
+      // 调用服务层
+      const comment = await this.commentService.createComment(commentData);
+
+      const response = createSuccessResponse(comment);
+      return reply.code(201).send(response);
     } catch (error) {
       return this.handleError(error, reply);
     }

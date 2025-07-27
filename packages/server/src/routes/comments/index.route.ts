@@ -7,6 +7,7 @@ import {
   getCommentListSchema,
   getCommentByIdSchema,
   getPageStatsSchema,
+  createCommentSchema,
   moderateCommentsSchema,
 } from '../../schemas/comment';
 
@@ -18,6 +19,16 @@ const commentController = new CommentController(commentService);
 export async function commentRoutes(
   fastify: FastifyInstance
 ) {
+  // 添加CORS头到所有评论路由
+  fastify.addHook('onSend', async (request, reply, payload) => {
+    const origin = request.headers.origin;
+    if (origin) {
+      reply.header('Access-Control-Allow-Origin', origin);
+      reply.header('Access-Control-Allow-Credentials', 'true');
+      reply.header('Vary', 'Origin');
+    }
+    return payload;
+  });
   // 添加路由前缀
   await fastify.register(
     async function (fastify) {
@@ -25,6 +36,12 @@ export async function commentRoutes(
       fastify.get('/', {
         schema: getCommentListSchema,
         handler: commentController.getCommentList.bind(commentController),
+      });
+
+      // 创建新评论
+      fastify.post('/', {
+        schema: createCommentSchema,
+        handler: commentController.createComment.bind(commentController),
       });
 
       // 获取单个评论详情

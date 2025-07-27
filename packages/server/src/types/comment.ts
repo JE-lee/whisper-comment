@@ -13,7 +13,11 @@ export type CommentWithRelations = Prisma.CommentGetPayload<{
   include: {
     site: true;
     parent: true;
-    replies: true;
+    replies: {
+      include: {
+        replies: true;
+      };
+    };
   };
 }>;
 
@@ -27,7 +31,7 @@ export interface CommentResponse {
   content: string;
   status: CommentStatus;
   createdAt: Date;
-  replies?: CommentResponse[];
+  replies: CommentResponse[];
 }
 
 // Comment 列表查询参数

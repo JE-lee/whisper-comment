@@ -30,7 +30,10 @@ export class CommentRepository {
       ...(pageIdentifier && { pageIdentifier }),
       ...(status !== undefined && { status }),
       ...(authorToken && { authorToken }),
-      ...(parentId !== undefined && { parentId }),
+      // 处理parentId：空字符串表示查询顶级评论（parentId为null）
+      ...(parentId !== undefined && { 
+        parentId: parentId === '' ? null : parentId 
+      }),
     };
 
     // 构建排序条件
