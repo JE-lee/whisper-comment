@@ -3,20 +3,19 @@ import Fastify, { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify'
 import { prisma } from './lib/database';
 import { commentRoutes } from './routes/comment.routes';
 
-// 导入中间件
+// 导入插件
 import {
-  securityHeadersMiddleware,
-  developmentSecurityHeadersMiddleware,
-  corsEnhancedMiddleware,
-  developmentCorsMiddleware,
-  requestIdMiddleware,
-  requestTracingMiddleware,
-  requestLoggerMiddleware,
-  rateLimiterMiddleware,
-  requestValidatorMiddleware,
-  responseFormatterMiddleware,
-  errorHandlerMiddleware,
-} from './middleware';
+  securityHeadersPlugin,
+  developmentSecurityHeadersPlugin,
+  corsEnhancedPlugin,
+  developmentCorsPlugin,
+  requestIdPlugin,
+  requestTracingPlugin,
+  requestLoggerPlugin,
+  rateLimiterPlugin,
+  requestValidatorPlugin,
+  errorHandlerPlugin,
+} from './plugins';
 
 // 创建Fastify实例
 const fastify: FastifyInstance = Fastify({
@@ -87,41 +86,41 @@ fastify.decorateReply('paginated', function(items: any[], pagination: any, statu
   return this.send(response);
 });
 
-// 注册中间件和路由
+// 注册插件和路由
 fastify.register(async function (fastify) {
-  // 响应格式化装饰器已在主实例上注册，跳过中间件注册
+  // 响应格式化装饰器已在主实例上注册，跳过插件注册
   
-  // 2. 安全头中间件
+  // 2. 安全头插件
   if (config.isDevelopment) {
-    await fastify.register(developmentSecurityHeadersMiddleware);
+    await fastify.register(developmentSecurityHeadersPlugin);
   } else {
-    await fastify.register(securityHeadersMiddleware);
+    await fastify.register(securityHeadersPlugin);
   }
 
-  // 3. CORS中间件
+  // 3. CORS插件
   if (config.isDevelopment) {
-    await fastify.register(developmentCorsMiddleware);
+    await fastify.register(developmentCorsPlugin);
   } else {
-    await fastify.register(corsEnhancedMiddleware);
+    await fastify.register(corsEnhancedPlugin);
   }
 
-  // 4. 请求ID和追踪中间件
-  await fastify.register(requestIdMiddleware);
-  await fastify.register(requestTracingMiddleware);
+  // 4. 请求ID和追踪插件
+  await fastify.register(requestIdPlugin);
+  await fastify.register(requestTracingPlugin);
 
-  // 5. 请求日志中间件
-  await fastify.register(requestLoggerMiddleware);
+  // 5. 请求日志插件
+  await fastify.register(requestLoggerPlugin);
 
-  // 6. 速率限制中间件
-  await fastify.register(rateLimiterMiddleware);
+  // 6. 速率限制插件
+  await fastify.register(rateLimiterPlugin);
 
-  // 7. 请求验证中间件
-  await fastify.register(requestValidatorMiddleware);
+  // 7. 请求验证插件
+  await fastify.register(requestValidatorPlugin);
 
-  // 8. 错误处理中间件
-  await fastify.register(errorHandlerMiddleware);
+  // 8. 错误处理插件
+  await fastify.register(errorHandlerPlugin);
 
-  // 9. 注册路由（在所有中间件之后）
+  // 9. 注册路由（在所有插件之后）
   await fastify.register(commentRoutes);
   
   // 声明基础路由
@@ -217,6 +216,7 @@ const start = async (): Promise<void> => {
     }
   } catch (err) {
     fastify.log.error(err, 'Failed to start server');
+    // eslint-disable-next-line no-process-exit
     process.exit(1);
   }
 };
@@ -236,10 +236,12 @@ const gracefulShutdown = async (signal: string) => {
     fastify.log.info('Database disconnected');
     
     console.log('✅ Server shutdown completed');
+    // eslint-disable-next-line no-process-exit
     process.exit(0);
   } catch (error) {
     fastify.log.error(error, 'Error during shutdown');
     console.error('❌ Error during shutdown:', error);
+    // eslint-disable-next-line no-process-exit
     process.exit(1);
   }
 };
@@ -252,13 +254,11 @@ process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
 process.on('uncaughtException', (error) => {
   fastify.log.fatal(error, 'Uncaught exception');
   console.error('💥 Uncaught exception:', error);
-  process.exit(1);
 });
 
 process.on('unhandledRejection', (reason, promise) => {
   fastify.log.fatal({ reason, promise }, 'Unhandled rejection');
   console.error('💥 Unhandled rejection at:', promise, 'reason:', reason);
-  process.exit(1);
 });
 
 start();

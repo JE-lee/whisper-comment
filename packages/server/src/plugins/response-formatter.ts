@@ -1,12 +1,11 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { ApiResponse, ListResponse, PaginationInfo } from '../types/common';
-import { getCurrentRequestId } from './request-id';
 
 /**
- * 响应格式化中间件
+ * 响应格式化插件
  * 统一API响应格式，集成ApiResponse类型
  */
-export async function responseFormatterMiddleware(fastify: FastifyInstance) {
+export async function responseFormatterPlugin(fastify: FastifyInstance) {
   // 添加响应格式化装饰器
   fastify.decorateReply('success', function(data: any, statusCode: number = 200) {
     const requestId = this.request.requestContext?.get('requestId');
@@ -77,7 +76,7 @@ export async function responseFormatterMiddleware(fastify: FastifyInstance) {
           responseData.meta.responseTime = `${Date.now() - startTime}ms`;
           return JSON.stringify(responseData);
         }
-      } catch (error) {
+      } catch {
         // 如果不是JSON，直接返回原payload
       }
     }
@@ -121,7 +120,7 @@ export function createSuccessResponse<T>(
 export function createErrorResponse(
   code: string,
   message: string,
-  statusCode: number = 400,
+  statusCode?: number,
   details?: any,
   requestId?: string
 ): ApiResponse {

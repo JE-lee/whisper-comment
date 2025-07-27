@@ -3,10 +3,10 @@ import { handleError } from '../utils/errors';
 import { ApiResponse } from '../types/common';
 
 /**
- * 全局错误处理中间件
+ * 全局错误处理插件
  * 统一处理所有未捕获的错误
  */
-export async function errorHandlerMiddleware(fastify: FastifyInstance) {
+export async function errorHandlerPlugin(fastify: FastifyInstance) {
   // 设置全局错误处理器
   fastify.setErrorHandler(async (error: FastifyError, request: FastifyRequest, reply: FastifyReply) => {
     // 记录错误日志

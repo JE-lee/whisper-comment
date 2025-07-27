@@ -4,10 +4,10 @@ import { config } from '../config';
 import { ApiResponse } from '../types/common';
 
 /**
- * 速率限制中间件
+ * 速率限制插件
  * 防止API滥用，基于IP限制请求频率
  */
-export async function rateLimiterMiddleware(fastify: FastifyInstance) {
+export async function rateLimiterPlugin(fastify: FastifyInstance) {
   // 全局速率限制
   await fastify.register(rateLimit, {
     max: config.isDevelopment ? 1000 : 100, // 开发环境更宽松
@@ -25,7 +25,6 @@ export async function rateLimiterMiddleware(fastify: FastifyInstance) {
           message: 'Too many requests, please try again later',
           details: {
             limit: context.max,
-            remaining: context.remaining,
             resetTime: new Date(Date.now() + context.ttl).toISOString(),
           },
         },

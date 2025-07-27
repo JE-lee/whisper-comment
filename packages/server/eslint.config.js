@@ -1,8 +1,8 @@
-import js from '@eslint/js';
-import tseslint from '@typescript-eslint/eslint-plugin';
-import tsparser from '@typescript-eslint/parser';
+const js = require('@eslint/js');
+const tseslint = require('@typescript-eslint/eslint-plugin');
+const tsparser = require('@typescript-eslint/parser');
 
-export default [
+module.exports = [
   js.configs.recommended,
   {
     files: ['**/*.{js,ts}'],
@@ -10,7 +10,7 @@ export default [
       parser: tsparser,
       parserOptions: {
         ecmaVersion: 'latest',
-        sourceType: 'module',
+        sourceType: 'commonjs',
       },
       globals: {
         process: 'readonly',
@@ -19,6 +19,8 @@ export default [
         __filename: 'readonly',
         global: 'readonly',
         console: 'readonly',
+        require: 'readonly',
+        module: 'readonly'
       },
     },
     plugins: {
@@ -26,8 +28,9 @@ export default [
     },
     rules: {
       // TypeScript 规则
-      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
       '@typescript-eslint/no-explicit-any': 'warn',
+      'no-unused-vars': 'off', // 禁用基础的 no-unused-vars 规则
+      '@typescript-eslint/no-unused-vars': 'error', // 启用 @typescript-eslint/no-unused-vars 规则
       
       // 通用规则
       'no-console': 'off', // 服务器端允许 console

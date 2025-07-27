@@ -1,10 +1,10 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 
 /**
- * 请求日志中间件
+ * 请求日志插件
  * 记录请求详情、响应时间和状态码
  */
-export async function requestLoggerMiddleware(fastify: FastifyInstance) {
+export async function requestLoggerPlugin(fastify: FastifyInstance) {
   // 添加请求开始时间
   fastify.addHook('onRequest', async (request: FastifyRequest) => {
     (request as any).startTime = Date.now();
@@ -45,7 +45,7 @@ export async function requestLoggerMiddleware(fastify: FastifyInstance) {
   });
 
   // 记录慢请求
-  fastify.addHook('onResponse', async (request: FastifyRequest, reply: FastifyReply) => {
+  fastify.addHook('onResponse', async (request: FastifyRequest) => {
     const responseTime = Date.now() - ((request as any).startTime || Date.now());
     
     // 如果响应时间超过 1 秒，记录为慢请求

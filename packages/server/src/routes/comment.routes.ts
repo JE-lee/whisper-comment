@@ -1,4 +1,4 @@
-import { FastifyInstance, FastifyPluginOptions } from 'fastify';
+import { FastifyInstance } from 'fastify';
 import { CommentController } from '../controllers/comment.controller';
 import { CommentService } from '../services/comment.service';
 import { CommentRepository } from '../repositories/comment.repository';
@@ -10,8 +10,7 @@ const commentService = new CommentService(commentRepository);
 const commentController = new CommentController(commentService);
 
 export async function commentRoutes(
-  fastify: FastifyInstance,
-  options: FastifyPluginOptions
+  fastify: FastifyInstance
 ) {
   // 添加路由前缀
   await fastify.register(

@@ -1,6 +1,9 @@
+import { Comment } from '@prisma/client';
 import { CommentRepository } from '../repositories/comment.repository';
-import { CommentListQuery, CommentResponse, CommentListResponse, CommentStatus, CommentWithRelations } from '../types/comment';
+import { CommentListQuery, CommentResponse, CommentListResponse, CommentStatus } from '../types/comment';
 import { PaginationParams, PaginationInfo } from '../types/common';
+
+type CommentWithPossibleReplies = Comment & { replies?: CommentWithPossibleReplies[] };
 
 export class CommentService {
   constructor(private commentRepository: CommentRepository) {}
@@ -69,7 +72,7 @@ export class CommentService {
   /**
    * 将数据库模型转换为 API 响应格式
    */
-  private transformToResponse(comment: CommentWithRelations): CommentResponse {
+  private transformToResponse(comment: CommentWithPossibleReplies): CommentResponse {
     return {
       commentId: comment.commentId,
       siteId: comment.siteId,
@@ -102,7 +105,7 @@ export class CommentService {
   /**
    * 验证站点权限
    */
-  private async validateSiteAccess(siteId: string, apiKey?: string): Promise<boolean> {
+  private async validateSiteAccess(): Promise<boolean> {
     // 这里可以添加站点权限验证逻辑
     // 例如验证 API Key 是否匹配
     return true;

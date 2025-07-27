@@ -19,7 +19,6 @@ if (config.isDevelopment) {
 // 优雅关闭数据库连接
 async function gracefulShutdown() {
   await prisma.$disconnect();
-  process.exit(0);
 }
 
 process.on('beforeExit', async () => {

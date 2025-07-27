@@ -3,13 +3,13 @@ import cors from '@fastify/cors';
 import { config } from '../config';
 
 /**
- * CORS增强中间件
+ * CORS增强插件
  * 提供更精细的CORS控制，基于环境的动态配置
  */
-export async function corsEnhancedMiddleware(fastify: FastifyInstance) {
+export async function corsEnhancedPlugin(fastify: FastifyInstance) {
   const corsOptions = {
     // 允许的源
-    origin: (origin: string, callback: (err: Error | null, allow?: boolean) => void) => {
+    origin: (origin: string | undefined, callback: (err: Error | null, result: boolean) => void) => {
       // 开发环境允许所有源
       if (config.isDevelopment) {
         callback(null, true);
@@ -91,7 +91,7 @@ export async function corsEnhancedMiddleware(fastify: FastifyInstance) {
   });
 
   // 记录CORS相关的请求
-  fastify.addHook('onRequest', async (request, reply) => {
+  fastify.addHook('onRequest', async (request) => {
     const origin = request.headers.origin;
     const method = request.method;
     
@@ -114,7 +114,7 @@ export async function corsEnhancedMiddleware(fastify: FastifyInstance) {
  * 开发环境CORS配置
  * 更宽松的CORS策略用于开发
  */
-export async function developmentCorsMiddleware(fastify: FastifyInstance) {
+export async function developmentCorsPlugin(fastify: FastifyInstance) {
   await fastify.register(cors, {
     origin: true, // 允许所有源
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS', 'HEAD'],
@@ -133,7 +133,7 @@ export async function developmentCorsMiddleware(fastify: FastifyInstance) {
  * 生产环境CORS配置
  * 严格的CORS策略用于生产
  */
-export async function productionCorsMiddleware(fastify: FastifyInstance) {
+export async function productionCorsPlugin(fastify: FastifyInstance) {
   const allowedOrigins = [
     'https://whisper-comment.vercel.app',
     'https://www.whisper-comment.com',

@@ -1,15 +1,13 @@
 import { FastifyInstance, FastifyRequest, FastifyReply, preValidationHookHandler } from 'fastify';
-import { ZodSchema, ZodError } from 'zod';
-import { ValidationError } from '../utils/errors';
 import { ApiResponse } from '../types/common';
 
 /**
- * 请求验证中间件
+ * 请求验证插件
  * 统一的请求参数验证，集成Zod schema
  */
-export async function requestValidatorMiddleware(fastify: FastifyInstance) {
+export async function requestValidatorPlugin(fastify: FastifyInstance) {
   // 添加全局验证错误处理
-  fastify.setSchemaErrorFormatter((errors, dataVar) => {
+  fastify.setSchemaErrorFormatter((errors) => {
     const response: ApiResponse = {
       success: false,
       error: {
@@ -18,7 +16,6 @@ export async function requestValidatorMiddleware(fastify: FastifyInstance) {
         details: errors.map(error => ({
           field: error.instancePath || error.schemaPath,
           message: error.message,
-          value: error.data,
         })),
       },
       meta: {
@@ -27,51 +24,6 @@ export async function requestValidatorMiddleware(fastify: FastifyInstance) {
     };
     return new Error(JSON.stringify(response));
   });
-}
-
-/**
- * 创建Zod验证钩子
- */
-export function createZodValidationHook<T>(schema: ZodSchema<T>, target: 'body' | 'query' | 'params' = 'body'): preValidationHookHandler {
-  return async (request: FastifyRequest, reply: FastifyReply) => {
-    try {
-      const data = target === 'body' ? request.body : 
-                   target === 'query' ? request.query : 
-                   request.params;
-      
-      const validatedData = schema.parse(data);
-      
-      // 将验证后的数据重新赋值
-      if (target === 'body') {
-        request.body = validatedData;
-      } else if (target === 'query') {
-        request.query = validatedData;
-      } else {
-        request.params = validatedData;
-      }
-    } catch (error) {
-      if (error instanceof ZodError) {
-        const response: ApiResponse = {
-          success: false,
-          error: {
-            code: 'VALIDATION_ERROR',
-            message: `Invalid ${target} parameters`,
-            details: error.errors.map(err => ({
-              field: err.path.join('.'),
-              message: err.message,
-              code: err.code,
-              received: err.received,
-            })),
-          },
-          meta: {
-            timestamp: new Date().toISOString(),
-          },
-        };
-        return reply.code(400).send(response);
-      }
-      throw error;
-    }
-  };
 }
 
 /**

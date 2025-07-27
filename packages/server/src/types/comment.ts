@@ -1,4 +1,4 @@
-import { Comment, Site, Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 
 // Comment 状态枚举
 export enum CommentStatus {

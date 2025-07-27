@@ -1,4 +1,3 @@
-import { LogLevel } from 'fastify';
 import { env } from './env';
 
 export const config = {

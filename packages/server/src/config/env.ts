@@ -17,6 +17,7 @@ const parsedEnv = envSchema.safeParse(process.env);
 
 if (!parsedEnv.success) {
   console.error("❌ 环境变量校验失败:", prettifyError(parsedEnv.error));
+  // eslint-disable-next-line no-process-exit
   process.exit(1);
 }
 

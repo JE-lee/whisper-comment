@@ -3,16 +3,12 @@ import requestContext from '@fastify/request-context';
 import { v4 as uuidv4 } from 'uuid';
 
 /**
- * 请求ID中间件
+ * 请求ID插件
  * 为每个请求生成唯一ID，便于日志追踪和调试
  */
-export async function requestIdMiddleware(fastify: FastifyInstance) {
+export async function requestIdPlugin(fastify: FastifyInstance) {
   // 注册请求上下文插件
-  await fastify.register(requestContext, {
-    defaultStoreValues: {
-      requestId: () => uuidv4(),
-    },
-  });
+  await fastify.register(requestContext);
 
   // 添加请求ID到请求头
   fastify.addHook('onRequest', async (request: FastifyRequest, reply: FastifyReply) => {
@@ -63,10 +59,10 @@ export function generateCorrelationId(): string {
 }
 
 /**
- * 请求追踪中间件
+ * 请求追踪插件
  * 添加更详细的请求追踪信息
  */
-export async function requestTracingMiddleware(fastify: FastifyInstance) {
+export async function requestTracingPlugin(fastify: FastifyInstance) {
   fastify.addHook('onRequest', async (request: FastifyRequest) => {
     const requestId = request.requestContext.get('requestId');
     const traceData = {

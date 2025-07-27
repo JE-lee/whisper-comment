@@ -3,10 +3,10 @@ import helmet from '@fastify/helmet';
 import { config } from '../config';
 
 /**
- * 安全头中间件
+ * 安全头插件
  * 添加安全相关的HTTP头，防止常见的安全攻击
  */
-export async function securityHeadersMiddleware(fastify: FastifyInstance) {
+export async function securityHeadersPlugin(fastify: FastifyInstance) {
   await fastify.register(helmet, {
     // 内容安全策略
     contentSecurityPolicy: {
@@ -96,7 +96,7 @@ export async function securityHeadersMiddleware(fastify: FastifyInstance) {
  * 开发环境安全头配置
  * 在开发环境中使用更宽松的安全策略
  */
-export async function developmentSecurityHeadersMiddleware(fastify: FastifyInstance) {
+export async function developmentSecurityHeadersPlugin(fastify: FastifyInstance) {
   await fastify.register(helmet, {
     contentSecurityPolicy: false, // 开发环境禁用CSP
     crossOriginEmbedderPolicy: false,
