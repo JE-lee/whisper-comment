@@ -1,18 +1,35 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { CommentService } from '../services/comment.service';
-import {
-  commentListQuerySchema,
-  commentIdParamSchema,
-  pageStatsQuerySchema,
-  moderateCommentsSchema,
-  CommentListQueryInput,
-  CommentIdParamInput,
-  PageStatsQueryInput,
-  ModerateCommentsInput,
-} from '../schemas/comment.schema';
 import { ApiResponse } from '../types/common';
 import { CommentListResponse, CommentResponse } from '../types/comment';
 import { handleError, createSuccessResponse, NotFoundError } from '../utils/errors';
+
+// 定义接口类型
+interface CommentListQueryInput {
+  siteId: string;
+  pageIdentifier?: string;
+  status?: number;
+  authorToken?: string;
+  parentId?: string;
+  page?: number;
+  limit?: number;
+  sortBy?: 'createdAt' | 'status';
+  sortOrder?: 'asc' | 'desc';
+}
+
+interface CommentIdParamInput {
+  commentId: string;
+}
+
+interface PageStatsQueryInput {
+  siteId: string;
+  pageIdentifier: string;
+}
+
+interface ModerateCommentsInput {
+  commentIds: string[];
+  status: number;
+}
 
 export class CommentController {
   constructor(private commentService: CommentService) {}
@@ -26,8 +43,14 @@ export class CommentController {
     reply: FastifyReply
   ): Promise<ApiResponse<CommentListResponse>> {
     try {
-      // 验证查询参数
-      const query = commentListQuerySchema.parse(request.query);
+      // Fastify已经通过schema验证了参数，直接使用
+      const query = {
+        ...request.query,
+        page: request.query.page || 1,
+        limit: request.query.limit || 20,
+        sortBy: request.query.sortBy || 'createdAt',
+        sortOrder: request.query.sortOrder || 'desc'
+      };
 
       // 调用服务层
       const result = await this.commentService.getCommentList(query);
@@ -48,8 +71,7 @@ export class CommentController {
     reply: FastifyReply
   ): Promise<ApiResponse<CommentResponse | null>> {
     try {
-      // 验证路径参数
-      const { commentId } = commentIdParamSchema.parse(request.params);
+      const { commentId } = request.params;
 
       // 调用服务层
       const comment = await this.commentService.getCommentById(commentId);
@@ -74,11 +96,10 @@ export class CommentController {
     reply: FastifyReply
   ) {
     try {
-      // 验证查询参数
-      const query = pageStatsQuerySchema.parse(request.query);
+      const { siteId, pageIdentifier } = request.query;
 
       // 调用服务层
-      const stats = await this.commentService.getPageStats(query.siteId, query.pageIdentifier);
+      const stats = await this.commentService.getPageStats(siteId, pageIdentifier);
 
       const response = createSuccessResponse(stats);
       return reply.code(200).send(response);
@@ -96,13 +117,12 @@ export class CommentController {
     reply: FastifyReply
   ) {
     try {
-      // 验证请求体
-      const body = moderateCommentsSchema.parse(request.body);
+      const { commentIds, status } = request.body;
 
       // 调用服务层
       const updatedCount = await this.commentService.moderateComments(
-        body.commentIds,
-        body.status
+        commentIds,
+        status
       );
 
       const response = createSuccessResponse({

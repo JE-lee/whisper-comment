@@ -1,7 +1,7 @@
 import { config } from './config';
 import Fastify, { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { prisma } from './lib/database';
-import { commentRoutes } from './routes/comment.routes';
+import { registerRoutes } from './routes';
 
 // 导入插件
 import {
@@ -121,7 +121,7 @@ fastify.register(async function (fastify) {
   await fastify.register(errorHandlerPlugin);
 
   // 9. 注册路由（在所有插件之后）
-  await fastify.register(commentRoutes);
+  await registerRoutes(fastify);
   
   // 声明基础路由
   fastify.get('/', async (request: FastifyRequest, reply: FastifyReply) => {

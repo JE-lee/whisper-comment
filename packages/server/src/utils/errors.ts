@@ -96,6 +96,22 @@ export function handleError(error: any, reply: FastifyReply): FastifyReply {
     return reply.code(400).send(response);
   }
 
+  // Fastify 验证错误
+  if (error.validation) {
+    const response: ApiResponse = {
+      success: false,
+      error: {
+        code: 'VALIDATION_ERROR',
+        message: 'Invalid request parameters',
+        details: error.validation,
+      },
+      meta: {
+        timestamp: new Date().toISOString(),
+      },
+    };
+    return reply.code(400).send(response);
+  }
+
   // Prisma 错误
   if (error.code && error.code.startsWith('P')) {
     let message = 'Database operation failed';

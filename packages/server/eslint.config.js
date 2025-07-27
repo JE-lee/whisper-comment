@@ -6,6 +6,7 @@ module.exports = [
   js.configs.recommended,
   {
     files: ['**/*.{js,ts}'],
+    ignores: ['dist/**', 'node_modules/**', 'coverage/**'],
     languageOptions: {
       parser: tsparser,
       parserOptions: {
