@@ -31,9 +31,6 @@ coverage/
 # nyc test coverage
 .nyc_output
 
-# Prisma
-prisma/migrations/
-
 # IDE
 .vscode/
 .idea/
