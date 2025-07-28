@@ -69,7 +69,7 @@ export function Comments({ className = '', title = '评论区' }: CommentsProps)
             ...comment,
             likes: voteResult.likes,
             dislikes: voteResult.dislikes,
-            userAction: voteResult.userAction
+            userAction: voteResult.userAction as 'like' | 'dislike' | null
           }
         }
         if (comment.replies && comment.replies.length > 0) {

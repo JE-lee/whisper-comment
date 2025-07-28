@@ -3,8 +3,18 @@ import type { Comment, CreateCommentRequest, VoteRequest } from '../types/commen
 // API 基础配置
 const API_BASE_URL = 'http://localhost:3000/api'
 const DEFAULT_SITE_ID = '550e8400-e29b-41d4-a716-446655440000' // 使用有效的UUID格式
-const DEFAULT_PAGE_IDENTIFIER = 'test-page'
 const DEFAULT_AUTHOR_TOKEN = 'anonymous-user-token'
+
+// 获取当前页面URL作为页面标识符（不包括query和hash部分）
+const getCurrentPageIdentifier = (): string => {
+  if (typeof window === 'undefined') {
+    return 'default-page' // 服务端渲染时的默认值
+  }
+  
+  const url = new URL(window.location.href)
+  // 返回协议 + 主机 + 路径，不包括query和hash
+  return `${url.protocol}//${url.host}${url.pathname}`
+}
 
 // API 响应类型
 interface ApiResponse<T> {
@@ -49,7 +59,7 @@ const transformServerComment = (serverComment: ServerComment): Comment => {
     timestamp: serverComment.createdAt,
     likes: serverComment.likes,
     dislikes: serverComment.dislikes,
-    userAction: serverComment.userAction,
+    userAction: serverComment.userAction as 'like' | 'dislike' | null,
     parentId: serverComment.parentId,
     replies: serverComment.replies ? serverComment.replies.map(transformServerComment) : []
   }
@@ -84,7 +94,7 @@ export const commentService = {
     try {
       const params = new URLSearchParams({
         siteId: DEFAULT_SITE_ID,
-        pageIdentifier: DEFAULT_PAGE_IDENTIFIER,
+        pageIdentifier: getCurrentPageIdentifier(),
         status: '0', // 获取待审核的评论（测试用）
         limit: '100', // 获取更多评论
         parentId: '', // 只获取顶级评论（parentId为null的评论）
@@ -108,7 +118,7 @@ export const commentService = {
     try {
       const createData = {
         siteId: DEFAULT_SITE_ID,
-        pageIdentifier: DEFAULT_PAGE_IDENTIFIER,
+        pageIdentifier: getCurrentPageIdentifier(),
         parentId: request.parentId || undefined,
         authorToken: DEFAULT_AUTHOR_TOKEN,
         authorNickname: request.author,

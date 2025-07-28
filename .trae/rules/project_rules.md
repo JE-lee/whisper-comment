@@ -6,3 +6,4 @@
    - 后端：Fastify + Prisma
    - 前端：Preact + Tailwind CSS
    - 数据库： Neon + PostgreSQL, 必要的时候可以通过 Neon MCP 来获取操作数据库。
+6. git commit 信息使用英文，并且要符合 Conventional Commit 规范。
