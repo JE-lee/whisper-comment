@@ -1,6 +1,7 @@
 import { CommentRepository } from '../repositories/comment.repository';
 import { CommentListQuery, CommentResponse, CommentListResponse, CommentStatus, CreateCommentData, VoteCommentData, VoteResponse, VoteType } from '../types/comment';
 import { PaginationParams, PaginationInfo } from '../types/common';
+import { NotificationService } from './notification.service';
 
 import { CommentWithRelations } from '../types/comment';
 
@@ -63,6 +64,22 @@ export class CommentService {
 
     // 调用 Repository 创建评论
     const comment = await this.commentRepository.create(commentData);
+
+    // 发送实时通知
+    try {
+      await NotificationService.sendNewCommentNotification({
+        commentId: comment.commentId,
+        siteId: comment.siteId,
+        pageIdentifier: comment.pageIdentifier,
+        content: comment.content,
+        authorNickname: comment.authorNickname,
+        authorToken: comment.authorToken,
+        parentId: comment.parentId || undefined,
+      });
+    } catch (error) {
+      // 通知发送失败不应该影响评论创建
+      console.error('Failed to send notification:', error);
+    }
 
     // 转换为 API 响应格式
     return this.transformToResponse(comment);

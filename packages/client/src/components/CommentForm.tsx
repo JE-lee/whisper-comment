@@ -42,8 +42,8 @@ export function CommentForm({ onSubmit, parentId, placeholder = "写下你的评
         setShowAuthorInput(false)
       }
       if (onCancel) onCancel()
-    } catch (error) {
-      console.error('提交评论失败:', error)
+    } catch (_error) {
+      // Ignore submit errors
     } finally {
       setIsSubmitting(false)
     }
@@ -116,4 +116,4 @@ export function CommentForm({ onSubmit, parentId, placeholder = "写下你的评
       </div>
     </form>
   )
-} 
+}

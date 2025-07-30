@@ -83,8 +83,8 @@ export function CommentItem({ comment, onVote, onReply, depth = 0, parentAuthor 
         commentId: comment.id,
         action
       })
-    } catch (error) {
-      console.error('投票失败:', error)
+    } catch (_error) {
+      // Ignore vote errors
     } finally {
       setIsVoting(false)
       // 动画持续一点时间后清除

@@ -10,6 +10,8 @@ const envSchema = z.object({
   PORT: z.string().default("3000").transform((val) => parseInt(val, 10)),
   HOST: z.ipv4().default("0.0.0.0"),
   DATABASE_URL: z.url(),
+  UPSTASH_REDIS_REST_URL: z.url(),
+  UPSTASH_REDIS_REST_TOKEN: z.string(),
 });
 
 

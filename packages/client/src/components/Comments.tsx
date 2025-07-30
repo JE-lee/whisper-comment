@@ -22,8 +22,7 @@ export function Comments({ className = '', title = '评论区' }: CommentsProps)
       setError(null)
       const data = await commentService.getComments()
       setComments(data)
-    } catch (err) {
-      console.error('加载评论失败:', err)
+    } catch (_err) {
       setError('加载评论失败，请稍后重试')
     } finally {
       setLoading(false)
@@ -44,8 +43,7 @@ export function Comments({ className = '', title = '评论区' }: CommentsProps)
         // 这是顶级评论，直接添加到列表
         setComments(prevComments => [...prevComments, newComment])
       }
-    } catch (err) {
-      console.error('创建评论失败:', err)
+    } catch (_err) {
       throw new Error('发布评论失败，请稍后重试')
     }
   }

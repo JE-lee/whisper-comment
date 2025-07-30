@@ -2,6 +2,7 @@ import { config } from './config';
 import Fastify, { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { prisma } from './lib/database';
 import { registerRoutes } from './routes';
+import { registerWebSocketRoutes } from './services/websocket.service';
 
 // 导入插件
 import {
@@ -119,7 +120,10 @@ fastify.register(async function (fastify) {
   // 8. 错误处理插件
   await fastify.register(errorHandlerPlugin);
 
-  // 9. 注册路由（在所有插件之后）
+  // 9. 注册 WebSocket 路由
+  await registerWebSocketRoutes(fastify);
+  
+  // 10. 注册 HTTP 路由（在所有插件之后）
   await registerRoutes(fastify);
   
   // 声明基础路由
@@ -190,9 +194,10 @@ fastify.register(async function (fastify) {
 // 启动服务器
 const start = async (): Promise<void> => {
   try {
-    // 连接数据库
-    await prisma.$connect();
-    fastify.log.info('Database connected successfully');
+    // 暂时跳过数据库连接，专注测试 WebSocket 功能
+    // await prisma.$connect();
+    // fastify.log.info('Database connected successfully');
+    fastify.log.info('Starting server without database connection for WebSocket testing');
 
     const port = config.PORT;
     const host = config.HOST;
@@ -230,9 +235,10 @@ const gracefulShutdown = async (signal: string) => {
     await fastify.close();
     fastify.log.info('Fastify server closed');
     
-    // 断开数据库连接
-    await prisma.$disconnect();
-    fastify.log.info('Database disconnected');
+    // 暂时跳过数据库断开连接
+    // await prisma.$disconnect();
+    // fastify.log.info('Database disconnected');
+    fastify.log.info('Server shutdown (database connection was skipped)');
     
     console.log('✅ Server shutdown completed');
     // eslint-disable-next-line no-process-exit

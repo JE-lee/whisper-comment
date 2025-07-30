@@ -1,5 +1,7 @@
 import { env } from './env';
 
+export { env };
+
 export const config = {
   ...env,
   isDevelopment: env.NODE_ENV === 'development',

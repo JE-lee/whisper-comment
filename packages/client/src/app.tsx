@@ -1,4 +1,5 @@
 import { Comments } from './components/Comments'
+import { NotificationManager } from './components/NotificationManager'
 import { useState } from 'preact/hooks'
 
 export function App() {
@@ -73,6 +74,14 @@ export function App() {
           />
         </div>
       </main>
+
+      {/* 通知管理器 */}
+      <NotificationManager 
+        maxNotifications={5}
+        autoHideDelay={5000}
+        showConnectionStatus={true}
+        position="top-right"
+      />
 
       {/* 页脚 */}
       <footer class="bg-white border-t border-gray-200 mt-16">
