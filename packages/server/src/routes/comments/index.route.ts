@@ -2,6 +2,7 @@ import { FastifyInstance } from 'fastify';
 import { CommentController } from '../../controllers/comment.controller';
 import { CommentService } from '../../services/comment.service';
 import { CommentRepository } from '../../repositories/comment.repository';
+import { SiteRepository } from '../../repositories/site.repository';
 import { prisma } from '../../lib/database';
 import {
   getCommentListSchema,
@@ -14,7 +15,8 @@ import { voteCommentSchema } from '../../schemas/vote';
 
 // 依赖注入：创建实例
 const commentRepository = new CommentRepository(prisma);
-const commentService = new CommentService(commentRepository);
+const siteRepository = new SiteRepository(prisma);
+const commentService = new CommentService(commentRepository, siteRepository);
 const commentController = new CommentController(commentService);
 
 export async function commentRoutes(

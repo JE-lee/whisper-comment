@@ -78,7 +78,7 @@ export function App() {
       {/* 通知管理器 */}
       <NotificationManager 
         maxNotifications={5}
-        autoHideDelay={5000}
+        autoHideDelay={0}
         showConnectionStatus={true}
         position="top-right"
       />

@@ -1,10 +1,12 @@
 import { FastifyInstance } from 'fastify';
-import { RedisManager, NotificationMessage, REDIS_KEYS, redis } from '../lib/redis';
+import { RedisManager, NotificationMessage } from '../lib/redis';
 import { v4 as uuidv4 } from 'uuid';
+import { WebSocket } from 'ws';
+import fastifyWebsocket from '@fastify/websocket';
 
 // WebSocket 连接管理器
 class WebSocketManager {
-  private connections = new Map<string, any>();
+  private connections = new Map<string, WebSocket>();
   private fastify: FastifyInstance;
 
   constructor(fastify: FastifyInstance) {
@@ -17,13 +19,8 @@ class WebSocketManager {
    */
   private async setupNotificationSubscriber() {
     try {
-      // 订阅通知频道
-      await redis.subscribe(REDIS_KEYS.NOTIFICATION_CHANNEL);
-      
-      // 监听消息 - 使用轮询方式检查通知
-      // 注意：Upstash Redis 不支持传统的 pub/sub 事件监听
-      // 这里可以考虑使用其他方式实现实时通知
-      
+      // 由于 Upstash Redis 不支持传统的 pub/sub 事件监听
+      // 我们将在 sendNotification 函数中直接处理通知
       this.fastify.log.info('WebSocket notification subscriber setup completed');
     } catch (error) {
       this.fastify.log.error('Failed to setup notification subscriber:', error);
@@ -33,7 +30,7 @@ class WebSocketManager {
   /**
    * 处理通知消息
    */
-  private async handleNotification(notification: NotificationMessage) {
+  public async handleNotification(notification: NotificationMessage) {
     try {
       if (notification.targetUserToken) {
         // 发送给特定用户
@@ -51,18 +48,47 @@ class WebSocketManager {
    * 发送消息给特定用户
    */
   private async sendToUser(userToken: string, message: any) {
+    console.log('[WebSocketManager] 尝试发送消息给用户:', {
+      targetUserToken: userToken,
+      messageType: message.type
+    });
+    
     const connectionId = await RedisManager.getConnectionId(userToken);
+    console.log('[WebSocketManager] 查询连接ID结果:', {
+      userToken,
+      connectionId,
+      hasConnection: connectionId ? this.connections.has(connectionId) : false
+    });
+    
     if (connectionId && this.connections.has(connectionId)) {
       const socket = this.connections.get(connectionId)!;
       try {
-        socket.socket.send(JSON.stringify(message));
+        socket.send(JSON.stringify(message));
+        console.log('[WebSocketManager] 消息发送成功:', {
+          userToken,
+          connectionId,
+          messageType: message.type
+        });
       } catch (error) {
+        console.error('[WebSocketManager] 消息发送失败:', {
+          userToken,
+          connectionId,
+          error
+        });
         this.fastify.log.error(`Failed to send message to user ${userToken}:`, error);
         // 连接可能已断开，清理连接
         if (connectionId) {
           await this.removeConnection(connectionId);
         }
       }
+    } else {
+      console.log('[WebSocketManager] 用户未连接或连接不存在:', {
+        userToken,
+        connectionId,
+        hasConnectionId: !!connectionId,
+        hasConnection: connectionId ? this.connections.has(connectionId) : false,
+        totalConnections: this.connections.size
+      });
     }
   }
 
@@ -75,7 +101,7 @@ class WebSocketManager {
       try {
         // 这里可以根据需要添加页面过滤逻辑
         // 目前简单广播给所有连接的用户
-        socket.socket.send(JSON.stringify(message));
+        socket.send(JSON.stringify(message));
       } catch (error) {
         this.fastify.log.error(`Failed to broadcast to connection ${connectionId}:`, error);
         // 连接可能已断开，清理连接
@@ -89,7 +115,7 @@ class WebSocketManager {
   /**
    * 添加新连接
    */
-  async addConnection(userToken: string, socket: any): Promise<string> {
+  async addConnection(userToken: string, socket: WebSocket): Promise<string> {
     const connectionId = uuidv4();
     
     // 存储连接
@@ -132,15 +158,15 @@ let wsManager: WebSocketManager;
  */
 export async function registerWebSocketRoutes(fastify: FastifyInstance) {
   // 注册 WebSocket 插件
-  await fastify.register(require('@fastify/websocket'));
+  await fastify.register(fastifyWebsocket);
   
   // 创建 WebSocket 管理器
   wsManager = new WebSocketManager(fastify);
   
   // WebSocket 路由
   fastify.register(async function (fastify) {
-    fastify.get('/ws', { websocket: true } as any, async (connection: any) => {
-      const { socket } = connection;
+    fastify.get('/ws', { websocket: true } as any, async (sock: any) => {
+      const socket = sock as unknown as WebSocket
       let connectionId: string | null = null;
       let userToken: string | null = null;
       
@@ -155,7 +181,7 @@ export async function registerWebSocketRoutes(fastify: FastifyInstance) {
             // 用户认证
             userToken = data.userToken;
             if (userToken) {
-              connectionId = await wsManager.addConnection(userToken, connection);
+              connectionId = await wsManager.addConnection(userToken, socket);
             }
             
             // 发送认证成功消息
@@ -223,5 +249,8 @@ export function getWebSocketManager(): WebSocketManager {
  * 发送通知的便捷函数
  */
 export async function sendNotification(notification: NotificationMessage) {
-  await RedisManager.publishNotification(notification);
+  // 直接处理通知，不依赖 Redis pub/sub
+  if (wsManager) {
+    await wsManager.handleNotification(notification);
+  }
 }

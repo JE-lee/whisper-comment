@@ -1,4 +1,5 @@
 import { CommentRepository } from '../repositories/comment.repository';
+import { SiteRepository } from '../repositories/site.repository';
 import { CommentListQuery, CommentResponse, CommentListResponse, CommentStatus, CreateCommentData, VoteCommentData, VoteResponse, VoteType } from '../types/comment';
 import { PaginationParams, PaginationInfo } from '../types/common';
 import { NotificationService } from './notification.service';
@@ -6,7 +7,10 @@ import { NotificationService } from './notification.service';
 import { CommentWithRelations } from '../types/comment';
 
 export class CommentService {
-  constructor(private commentRepository: CommentRepository) {}
+  constructor(
+    private commentRepository: CommentRepository,
+    private siteRepository: SiteRepository
+  ) {}
 
   /**
    * 获取评论列表
@@ -53,6 +57,9 @@ export class CommentService {
    * 创建新评论
    */
   async createComment(data: CreateCommentData): Promise<CommentResponse> {
+    // 确保站点存在，如果不存在则创建默认站点
+    await this.siteRepository.getOrCreateDefault(data.siteId);
+    
     // 内容过滤
     const sanitizedContent = this.sanitizeContent(data.content);
     
@@ -65,20 +72,22 @@ export class CommentService {
     // 调用 Repository 创建评论
     const comment = await this.commentRepository.create(commentData);
 
-    // 发送实时通知
-    try {
-      await NotificationService.sendNewCommentNotification({
-        commentId: comment.commentId,
-        siteId: comment.siteId,
-        pageIdentifier: comment.pageIdentifier,
-        content: comment.content,
-        authorNickname: comment.authorNickname,
-        authorToken: comment.authorToken,
-        parentId: comment.parentId || undefined,
-      });
-    } catch (error) {
-      // 通知发送失败不应该影响评论创建
-      console.error('Failed to send notification:', error);
+    // 如果是回复评论，发送回复通知
+    if (comment.parentId) {
+      try {
+        await NotificationService.sendCommentReplyNotification({
+          commentId: comment.commentId,
+          siteId: comment.siteId,
+          pageIdentifier: comment.pageIdentifier,
+          content: comment.content,
+          authorNickname: comment.authorNickname,
+          authorToken: comment.authorToken,
+          parentId: comment.parentId,
+        });
+      } catch (error) {
+        // 通知发送失败不应该影响评论创建
+        console.error('Failed to send reply notification:', error);
+      }
     }
 
     // 转换为 API 响应格式

@@ -7,11 +7,13 @@ import { sendNotification } from './websocket.service';
  */
 export class NotificationService {
   /**
-   * 发送新评论通知
-   * @param commentData 评论数据
+   * 发送新评论通知（已废弃，不再使用）
+   * @param _commentData 评论数据
+   * @deprecated 根据新需求，创建新评论时不再发送通知
    */
   static async sendNewCommentNotification(
-    commentData: {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _commentData: {
       commentId: string;
       siteId: string;
       pageIdentifier: string;
@@ -21,26 +23,8 @@ export class NotificationService {
       parentId?: string;
     }
   ) {
-    const notification: NotificationMessage = {
-      type: 'new_comment',
-      data: {
-        commentId: commentData.commentId,
-        siteId: commentData.siteId,
-        pageIdentifier: commentData.pageIdentifier,
-        content: commentData.content,
-        authorNickname: commentData.authorNickname,
-        ...(commentData.parentId && { parentId: commentData.parentId }),
-      },
-      timestamp: new Date().toISOString(),
-    };
-
-    // 如果是回复评论，需要通知被回复的用户
-    if (commentData.parentId) {
-      await this.sendCommentReplyNotification(commentData);
-    }
-
-    // 广播给页面上的其他用户（排除评论作者）
-    await sendNotification(notification);
+    // 不再发送新评论通知
+    console.log('New comment notification disabled by design');
   }
 
   /**
@@ -58,10 +42,47 @@ export class NotificationService {
       parentId?: string;
     }
   ) {
-    // 这里需要根据 parentId 查询原评论的作者token
-    // 由于我们需要访问数据库，这里先预留接口
-    // 实际实现时需要注入 CommentService 或直接查询数据库
+    console.log('[NotificationService] 开始处理回复通知:', {
+      commentId: replyData.commentId,
+      parentId: replyData.parentId,
+      authorNickname: replyData.authorNickname,
+      authorToken: replyData.authorToken
+    });
+
+    // 查询父评论，获取原评论作者的userToken
+    let parentCommentAuthorToken: string | null = null;
     
+    if (replyData.parentId) {
+      try {
+        // 这里需要注入 CommentRepository 实例
+        // 由于这是静态方法，我们需要通过其他方式获取 repository
+        // 暂时通过直接查询数据库的方式实现
+        const { PrismaClient } = await import('@prisma/client');
+        const prisma = new PrismaClient();
+        
+        const parentComment = await prisma.comment.findUnique({
+          where: { commentId: replyData.parentId },
+          select: { authorToken: true }
+        });
+        
+        if (parentComment) {
+          parentCommentAuthorToken = parentComment.authorToken;
+          console.log('[NotificationService] 找到父评论作者:', {
+            parentId: replyData.parentId,
+            parentAuthorToken: parentCommentAuthorToken
+          });
+        } else {
+          console.log('[NotificationService] 未找到父评论:', replyData.parentId);
+        }
+        
+        await prisma.$disconnect();
+      } catch (error) {
+        console.error('[NotificationService] 查询父评论失败:', error);
+      }
+    } else {
+      console.log('[NotificationService] 没有parentId，跳过通知发送');
+    }
+
     const notification: NotificationMessage = {
       type: 'comment_reply',
       data: {
@@ -75,15 +96,27 @@ export class NotificationService {
       timestamp: new Date().toISOString(),
     };
 
-    // TODO: 查询原评论作者的 userToken，然后发送定向通知
-    // const parentComment = await CommentService.getCommentById(replyData.parentId);
-    // if (parentComment) {
-    //   notification.targetUserToken = parentComment.authorToken;
-    //   await sendNotification(notification);
-    // }
-
-    // 暂时广播给所有用户
-    await sendNotification(notification);
+    // 只有找到了父评论作者，且不是自己回复自己，才发送定向通知
+    if (parentCommentAuthorToken && parentCommentAuthorToken !== replyData.authorToken) {
+      notification.targetUserToken = parentCommentAuthorToken;
+      console.log('[NotificationService] 发送回复通知给用户:', {
+        targetUserToken: parentCommentAuthorToken,
+        replyAuthor: replyData.authorNickname
+      });
+      
+      try {
+        await sendNotification(notification);
+        console.log('[NotificationService] 通知发送成功');
+      } catch (error) {
+        console.error('[NotificationService] 通知发送失败:', error);
+      }
+    } else {
+      if (!parentCommentAuthorToken) {
+        console.log('[NotificationService] 未找到父评论作者，跳过通知发送');
+      } else if (parentCommentAuthorToken === replyData.authorToken) {
+        console.log('[NotificationService] 用户回复自己的评论，跳过通知发送');
+      }
+    }
   }
 
   /**

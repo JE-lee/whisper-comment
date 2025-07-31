@@ -44,15 +44,15 @@ export class RedisManager {
    */
   static async unregisterConnection(connectionId: string): Promise<void> {
     // 先获取用户token
-    const userToken = await redis.get(REDIS_KEYS.WS_CONNECTION_REVERSE(connectionId));
+    const userToken = await redis.get<string>(REDIS_KEYS.WS_CONNECTION_REVERSE(connectionId));
     
     if (userToken) {
       const pipeline = redis.pipeline();
       
       // 删除所有相关映射
-      pipeline.del(REDIS_KEYS.WS_CONNECTION(userToken as string));
+      pipeline.del(REDIS_KEYS.WS_CONNECTION(userToken));
       pipeline.del(REDIS_KEYS.WS_CONNECTION_REVERSE(connectionId));
-      pipeline.del(REDIS_KEYS.USER_ONLINE(userToken as string));
+      pipeline.del(REDIS_KEYS.USER_ONLINE(userToken));
       
       await pipeline.exec();
     }

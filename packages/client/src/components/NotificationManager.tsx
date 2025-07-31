@@ -91,6 +91,12 @@ export class NotificationManager extends Component<NotificationManagerProps, Not
    * 处理收到的通知
    */
   private handleNotification = (notification: NotificationMessage) => {
+    console.log('[NotificationManager] 收到通知:', {
+      type: notification.type,
+      data: notification.data,
+      timestamp: notification.timestamp
+    });
+    
     const { type, data } = notification;
     let title = '';
     let message = '';
@@ -117,7 +123,7 @@ export class NotificationManager extends Component<NotificationManagerProps, Not
         message = '收到新消息';
     }
 
-    this.addNotification({
+    const notificationItem = {
       id: `${Date.now()}-${Math.random()}`,
       type,
       title,
@@ -125,14 +131,18 @@ export class NotificationManager extends Component<NotificationManagerProps, Not
       timestamp: new Date(),
       read: false,
       data
-    });
+    };
+    
+    console.log('[NotificationManager] 创建通知项:', notificationItem);
+    
+    this.addNotification(notificationItem);
   };
 
   /**
    * 添加通知
    */
   private addNotification = (notification: NotificationItem) => {
-    const { maxNotifications = 5, autoHideDelay = 5000 } = this.props;
+    const { maxNotifications = 5, autoHideDelay = 0 } = this.props;
     
     this.setState(prevState => {
       let notifications = [notification, ...prevState.notifications];
@@ -149,7 +159,7 @@ export class NotificationManager extends Component<NotificationManagerProps, Not
       };
     });
 
-    // 自动隐藏通知
+    // 只有当autoHideDelay大于0时才设置自动隐藏通知
     if (autoHideDelay > 0) {
       const timer = window.setTimeout(() => {
         this.removeNotification(notification.id);
@@ -184,9 +194,17 @@ export class NotificationManager extends Component<NotificationManagerProps, Not
       this.autoHideTimers.delete(id);
     }
 
-    this.setState(prevState => ({
-      notifications: prevState.notifications.filter(n => n.id !== id)
-    }));
+    this.setState(prevState => {
+      // 找到要移除的通知
+      const notificationToRemove = prevState.notifications.find(n => n.id === id);
+      const isUnread = notificationToRemove && !notificationToRemove.read;
+      
+      return {
+        notifications: prevState.notifications.filter(n => n.id !== id),
+        // 如果移除的是未读通知，减少未读计数
+        unreadCount: isUnread ? Math.max(0, prevState.unreadCount - 1) : prevState.unreadCount
+      };
+    });
   };
 
   /**

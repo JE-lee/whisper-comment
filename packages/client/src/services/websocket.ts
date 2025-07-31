@@ -219,12 +219,21 @@ export class WebSocketService {
    * 处理收到的消息
    */
   private handleMessage(message: WebSocketMessage): void {
+    console.log('[WebSocketService] 收到消息:', {
+      type: message.type,
+      data: message.data,
+      timestamp: message.timestamp
+    });
     
     switch (message.type) {
       case 'auth_success':
         this.connectionId = message.connectionId || null;
         this.setStatus(WebSocketStatus.AUTHENTICATED);
         this.startHeartbeat();
+        console.log('[WebSocketService] 认证成功:', {
+          connectionId: this.connectionId,
+          userToken: this.userToken
+        });
         break;
         
       case 'pong':
@@ -235,18 +244,24 @@ export class WebSocketService {
       case 'comment_reply':
       case 'comment_approved':
       case 'comment_rejected':
+        console.log('[WebSocketService] 收到通知消息，触发监听器:', {
+          type: message.type,
+          listenersCount: this.listeners.length
+        });
         this.listeners.forEach(listener => {
           listener.onNotification?.(message as NotificationMessage);
         });
         break;
         
       case 'error':
+        console.error('[WebSocketService] 收到错误消息:', message.data);
         this.listeners.forEach(listener => {
           listener.onError?.(new Error(message.data?.message || 'Server error'));
         });
         break;
         
       default:
+        console.log('[WebSocketService] 收到未知类型消息:', message.type);
         this.listeners.forEach(listener => {
           listener.onMessage?.(message);
         });
