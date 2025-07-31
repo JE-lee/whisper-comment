@@ -1,9 +1,18 @@
 import type { Comment, CreateCommentRequest, VoteRequest } from '../types/comment'
+import { IdentityService } from './identity'
 
 // API 基础配置
 const API_BASE_URL = 'http://localhost:3000/api'
 const DEFAULT_SITE_ID = '550e8400-e29b-41d4-a716-446655440000' // 使用有效的UUID格式
-const DEFAULT_AUTHOR_TOKEN = 'anonymous-user-token'
+
+// 获取当前用户token
+const getUserToken = (): string => {
+  let token = IdentityService.getUserToken()
+  if (!token) {
+    token = IdentityService.init()
+  }
+  return token
+}
 
 // 获取当前页面URL作为页面标识符（不包括query和hash部分）
 const getCurrentPageIdentifier = (): string => {
@@ -97,8 +106,9 @@ export const commentService = {
         pageIdentifier: getCurrentPageIdentifier(),
         status: '0', // 获取待审核的评论（测试用）
         limit: '100', // 获取更多评论
-        parentId: '', // 只获取顶级评论（parentId为null的评论）
-        authorToken: DEFAULT_AUTHOR_TOKEN // 传递用户token以获取投票状态
+        parentId: '' // 只获取顶级评论（parentId为null的评论）
+        // 注意：不传递authorToken，这样能看到所有用户的评论
+        // authorToken只在创建评论时使用
       })
       
       const response = await apiRequest<CommentListResponse>(`/comments?${params}`)
@@ -120,10 +130,12 @@ export const commentService = {
         siteId: DEFAULT_SITE_ID,
         pageIdentifier: getCurrentPageIdentifier(),
         parentId: request.parentId || undefined,
-        authorToken: DEFAULT_AUTHOR_TOKEN,
+        authorToken: getUserToken(),
         authorNickname: request.author,
         content: request.content
       }
+      
+
       
       const response = await apiRequest<ServerComment>('/comments', {
         method: 'POST',

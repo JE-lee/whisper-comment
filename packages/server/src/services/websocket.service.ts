@@ -118,11 +118,23 @@ class WebSocketManager {
   async addConnection(userToken: string, socket: WebSocket): Promise<string> {
     const connectionId = uuidv4();
     
+
+    
     // 存储连接
     this.connections.set(connectionId, socket);
     
     // 在 Redis 中注册连接
-    await RedisManager.registerConnection(userToken, connectionId);
+    try {
+      await RedisManager.registerConnection(userToken, connectionId);
+
+    } catch (error) {
+      console.error('[WebSocketManager] Redis连接注册失败:', {
+        userToken,
+        connectionId,
+        error
+      });
+      throw error;
+    }
     
     this.fastify.log.info(`WebSocket connection added: ${connectionId} for user: ${userToken}`);
     

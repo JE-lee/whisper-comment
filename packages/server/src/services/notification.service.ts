@@ -42,12 +42,7 @@ export class NotificationService {
       parentId?: string;
     }
   ) {
-    console.log('[NotificationService] 开始处理回复通知:', {
-      commentId: replyData.commentId,
-      parentId: replyData.parentId,
-      authorNickname: replyData.authorNickname,
-      authorToken: replyData.authorToken
-    });
+
 
     // 查询父评论，获取原评论作者的userToken
     let parentCommentAuthorToken: string | null = null;
@@ -67,10 +62,7 @@ export class NotificationService {
         
         if (parentComment) {
           parentCommentAuthorToken = parentComment.authorToken;
-          console.log('[NotificationService] 找到父评论作者:', {
-            parentId: replyData.parentId,
-            parentAuthorToken: parentCommentAuthorToken
-          });
+          
         } else {
           console.log('[NotificationService] 未找到父评论:', replyData.parentId);
         }
@@ -99,22 +91,33 @@ export class NotificationService {
     // 只有找到了父评论作者，且不是自己回复自己，才发送定向通知
     if (parentCommentAuthorToken && parentCommentAuthorToken !== replyData.authorToken) {
       notification.targetUserToken = parentCommentAuthorToken;
-      console.log('[NotificationService] 发送回复通知给用户:', {
-        targetUserToken: parentCommentAuthorToken,
-        replyAuthor: replyData.authorNickname
-      });
+
       
       try {
+        // 检查用户是否在线（暂时不做限制，离线用户也发送通知）
+        await RedisManager.isUserOnline(parentCommentAuthorToken);
+
+        
         await sendNotification(notification);
-        console.log('[NotificationService] 通知发送成功');
+
       } catch (error) {
-        console.error('[NotificationService] 通知发送失败:', error);
+        console.error('[NotificationService] 通知发送失败:', {
+          targetUserToken: parentCommentAuthorToken,
+          error: error instanceof Error ? error.message : error,
+          stack: error instanceof Error ? error.stack : undefined
+        });
       }
     } else {
       if (!parentCommentAuthorToken) {
-        console.log('[NotificationService] 未找到父评论作者，跳过通知发送');
+        console.log('[NotificationService] 未找到父评论作者，跳过通知发送:', {
+          parentId: replyData.parentId,
+          replyAuthor: replyData.authorNickname
+        });
       } else if (parentCommentAuthorToken === replyData.authorToken) {
-        console.log('[NotificationService] 用户回复自己的评论，跳过通知发送');
+        console.log('[NotificationService] 用户回复自己的评论，跳过通知发送:', {
+          userToken: replyData.authorToken,
+          authorNickname: replyData.authorNickname
+        });
       }
     }
   }

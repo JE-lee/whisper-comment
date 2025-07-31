@@ -54,6 +54,8 @@ export class NotificationManager extends Component<NotificationManagerProps, Not
       unreadCount: 0
     };
 
+
+
     // WebSocket 事件监听器
     this.wsListener = {
       onStatusChange: (status: WebSocketStatusType) => {
@@ -94,7 +96,8 @@ export class NotificationManager extends Component<NotificationManagerProps, Not
     console.log('[NotificationManager] 收到通知:', {
       type: notification.type,
       data: notification.data,
-      timestamp: notification.timestamp
+      timestamp: notification.timestamp,
+      targetUserToken: notification.targetUserToken
     });
     
     const { type, data } = notification;

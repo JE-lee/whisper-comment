@@ -219,11 +219,6 @@ export class WebSocketService {
    * 处理收到的消息
    */
   private handleMessage(message: WebSocketMessage): void {
-    console.log('[WebSocketService] 收到消息:', {
-      type: message.type,
-      data: message.data,
-      timestamp: message.timestamp
-    });
     
     switch (message.type) {
       case 'auth_success':
@@ -244,10 +239,7 @@ export class WebSocketService {
       case 'comment_reply':
       case 'comment_approved':
       case 'comment_rejected':
-        console.log('[WebSocketService] 收到通知消息，触发监听器:', {
-          type: message.type,
-          listenersCount: this.listeners.length
-        });
+
         this.listeners.forEach(listener => {
           listener.onNotification?.(message as NotificationMessage);
         });
@@ -275,6 +267,8 @@ export class WebSocketService {
     if (!this.userToken) {
       this.userToken = IdentityService.init();
     }
+    
+
     
     this.send({
       type: 'auth',
