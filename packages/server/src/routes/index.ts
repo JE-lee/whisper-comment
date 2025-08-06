@@ -1,6 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import { commentRoutes } from './comments/index.route';
 import { filterRoutes } from './filter.routes';
+import { pushRoutes } from './push.routes';
 
 /**
  * 注册所有路由模块
@@ -12,6 +13,9 @@ export async function registerRoutes(fastify: FastifyInstance) {
   
   // 注册过滤器相关路由
   await fastify.register(filterRoutes);
+  
+  // 注册推送通知相关路由
+  await fastify.register(pushRoutes, { prefix: '/api/push' });
   
   // 未来可以在这里添加其他模块的路由
   // await fastify.register(userRoutes);

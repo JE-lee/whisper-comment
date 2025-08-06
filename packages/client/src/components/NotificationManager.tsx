@@ -1,6 +1,7 @@
 import { Component } from 'preact';
 import { getWebSocketService, WebSocketStatus } from '../services/websocket';
 import type { NotificationMessage, WebSocketEventListener, WebSocketStatusType } from '../services/websocket';
+import { pushNotificationService } from '../services/pushNotification';
 
 /**
  * 通知项接口
@@ -78,6 +79,9 @@ export class NotificationManager extends Component<NotificationManagerProps, Not
     if (this.wsService.getStatus() === WebSocketStatus.DISCONNECTED) {
       this.wsService.connect();
     }
+    
+    // 初始化推送通知服务
+    this.initializePushNotifications();
   }
 
   componentWillUnmount() {
@@ -88,6 +92,19 @@ export class NotificationManager extends Component<NotificationManagerProps, Not
     this.autoHideTimers.forEach(timer => clearTimeout(timer));
     this.autoHideTimers.clear();
   }
+
+  /**
+   * 初始化推送通知服务
+   */
+  private initializePushNotifications = async () => {
+    try {
+      // 初始化推送通知服务
+      await pushNotificationService.initialize();
+      console.log('[NotificationManager] 推送通知服务已初始化');
+    } catch (error) {
+      console.error('[NotificationManager] 推送通知服务初始化失败:', error);
+    }
+  };
 
   /**
    * 处理收到的通知

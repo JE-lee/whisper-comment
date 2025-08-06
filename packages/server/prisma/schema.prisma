@@ -44,12 +44,15 @@ model Comment {
 }
 
 model PushSubscription {
-  subscriptionId Int      @id @default(autoincrement()) @map("subscription_id")
-  authorToken    String   @map("author_token")
-  endpoint       String   @unique
-  keys           Json
-  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-
+  id          String   @id @default(cuid())
+  userToken   String   @map("user_token")
+  endpoint    String
+  p256dh      String
+  auth        String
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  
+  @@unique([userToken, endpoint])
   @@map("push_subscriptions")
 }
 

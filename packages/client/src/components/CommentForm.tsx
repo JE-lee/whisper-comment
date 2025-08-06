@@ -2,6 +2,7 @@ import { useState } from 'preact/hooks'
 import { Send, User } from './Icons'
 import { clsx } from 'clsx'
 import type { CreateCommentRequest } from '../types/comment'
+import { PushPermissionGuide } from './PushPermissionGuide'
 
 interface CommentFormProps {
   onSubmit: (request: CreateCommentRequest) => Promise<void>
@@ -16,6 +17,7 @@ export function CommentForm({ onSubmit, parentId, placeholder = "写下你的评
   const [author, setAuthor] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showAuthorInput, setShowAuthorInput] = useState(false)
+  const [showPushGuide, setShowPushGuide] = useState(false)
 
   const handleSubmit = async (e: Event) => {
     e.preventDefault()
@@ -42,6 +44,14 @@ export function CommentForm({ onSubmit, parentId, placeholder = "写下你的评
         setShowAuthorInput(false)
       }
       if (onCancel) onCancel()
+      
+      // Show push permission guide after successful comment (only for new comments, not replies)
+      if (!isReply && !sessionStorage.getItem('pushPermissionSkipped')) {
+        // Check if push notifications are supported and not already granted
+        if ('Notification' in window && Notification.permission === 'default') {
+          setShowPushGuide(true)
+        }
+      }
     } catch (_error) {
       // Ignore submit errors
     } finally {
@@ -49,7 +59,20 @@ export function CommentForm({ onSubmit, parentId, placeholder = "写下你的评
     }
   }
 
+  const handlePushGuideClose = () => {
+    setShowPushGuide(false)
+  }
+
+  const handlePushPermissionGranted = () => {
+    console.log('Push permission granted')
+  }
+
+  const handlePushPermissionDenied = () => {
+    console.log('Push permission denied')
+  }
+
   return (
+    <>
     <form 
       onSubmit={handleSubmit}
       class={clsx(
@@ -115,5 +138,13 @@ export function CommentForm({ onSubmit, parentId, placeholder = "写下你的评
         </div>
       </div>
     </form>
+    
+    <PushPermissionGuide
+      isVisible={showPushGuide}
+      onClose={handlePushGuideClose}
+      onPermissionGranted={handlePushPermissionGranted}
+      onPermissionDenied={handlePushPermissionDenied}
+    />
+    </>
   )
 }

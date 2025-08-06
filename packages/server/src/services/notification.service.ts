@@ -1,5 +1,6 @@
 import { NotificationMessage, RedisManager } from '../lib/redis';
 import { sendNotification } from './websocket.service';
+import { PushService, PushNotificationPayload } from './push.service';
 
 /**
  * 通知服务类
@@ -95,10 +96,50 @@ export class NotificationService {
       
       try {
         // 检查用户是否在线（暂时不做限制，离线用户也发送通知）
-        await RedisManager.isUserOnline(parentCommentAuthorToken);
+        const isOnline = await RedisManager.isUserOnline(parentCommentAuthorToken);
 
-        
+        // 发送 WebSocket 通知
         await sendNotification(notification);
+        console.log('[NotificationService] WebSocket 通知已发送');
+
+        // 如果用户不在线，发送推送通知
+        if (!isOnline) {
+          const pushPayload: PushNotificationPayload = {
+            title: '新的评论回复',
+            body: `${replyData.authorNickname} 回复了您的评论`,
+            icon: '/icon-192x192.png',
+            badge: '/badge-72x72.png',
+            data: {
+              type: 'comment_reply',
+              commentId: replyData.commentId,
+              siteId: replyData.siteId,
+              pageIdentifier: replyData.pageIdentifier,
+              parentId: replyData.parentId,
+              url: `${replyData.pageIdentifier}#comment-${replyData.commentId}`
+            },
+            actions: [
+              {
+                action: 'view',
+                title: '查看回复',
+                icon: '/action-view.png'
+              },
+              {
+                action: 'dismiss',
+                title: '忽略'
+              }
+            ]
+          };
+
+          try {
+            await PushService.sendToUser(parentCommentAuthorToken, pushPayload);
+            console.log('[NotificationService] 推送通知已发送');
+          } catch (pushError) {
+            console.error('[NotificationService] 推送通知发送失败:', pushError);
+            // 推送失败不影响主流程，继续执行
+          }
+        } else {
+          console.log('[NotificationService] 用户在线，跳过推送通知');
+        }
 
       } catch (error) {
         console.error('[NotificationService] 通知发送失败:', {
