@@ -10,6 +10,8 @@ import {
   getPageStatsSchema,
   createCommentSchema,
   moderateCommentsSchema,
+  updateCommentSchema,
+  deleteCommentSchema,
 } from '../../schemas/comment';
 import { voteCommentSchema } from '../../schemas/vote';
 
@@ -69,6 +71,18 @@ export async function commentRoutes(
       fastify.post('/:commentId/vote', {
         schema: voteCommentSchema,
         handler: commentController.voteComment.bind(commentController),
+      });
+
+      // 编辑评论
+      fastify.put('/:commentId', {
+        schema: updateCommentSchema,
+        handler: commentController.updateComment.bind(commentController),
+      });
+
+      // 删除评论
+      fastify.delete('/:commentId', {
+        schema: deleteCommentSchema,
+        handler: commentController.deleteComment.bind(commentController),
       });
     },
     { prefix: '/api/comments' }

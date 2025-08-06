@@ -6,7 +6,9 @@ import { v4 as uuidv4 } from 'uuid';
  */
 export class IdentityService {
   private static readonly STORAGE_KEY = 'whisper_user_token';
+  private static readonly NICKNAME_STORAGE_KEY = 'whisper_user_nickname';
   private static userToken: string | null = null;
+  private static userNickname: string | null = null;
 
   /**
    * 初始化身份服务
@@ -20,9 +22,11 @@ export class IdentityService {
     try {
       // 尝试从 localStorage 获取现有token
       const storedToken = localStorage.getItem(this.STORAGE_KEY);
+      const storedNickname = localStorage.getItem(this.NICKNAME_STORAGE_KEY);
       
       if (storedToken && this.isValidToken(storedToken)) {
         this.userToken = storedToken;
+        this.userNickname = storedNickname;
       } else {
         // 生成新的token
         this.userToken = this.generateToken();
@@ -41,6 +45,26 @@ export class IdentityService {
    */
   static getUserToken(): string | null {
     return this.userToken;
+  }
+
+  /**
+   * 获取当前用户昵称
+   */
+  static getUserNickname(): string | null {
+    return this.userNickname;
+  }
+
+  /**
+   * 设置用户昵称
+   */
+  static setUserNickname(nickname: string): void {
+    this.userNickname = nickname;
+    
+    try {
+      localStorage.setItem(this.NICKNAME_STORAGE_KEY, nickname);
+    } catch (_error) {
+      // Ignore localStorage errors
+    }
   }
 
   /**
@@ -63,9 +87,11 @@ export class IdentityService {
    */
   static clearIdentity(): void {
     this.userToken = null;
+    this.userNickname = null;
     
     try {
       localStorage.removeItem(this.STORAGE_KEY);
+      localStorage.removeItem(this.NICKNAME_STORAGE_KEY);
     } catch (_error) {
       // Ignore localStorage errors
     }
@@ -128,15 +154,18 @@ export class IdentityService {
   static getIdentitySummary(): {
     hasToken: boolean;
     token?: string;
+    nickname?: string;
     createdAt?: Date;
     isExpired?: boolean;
   } {
     const token = this.getUserToken();
+    const nickname = this.getUserNickname();
     const createdAt = this.getTokenCreatedAt();
     
     return {
       hasToken: !!token,
       token: token || undefined,
+      nickname: nickname || undefined,
       createdAt: createdAt || undefined,
       isExpired: token ? this.isTokenExpired() : undefined,
     };

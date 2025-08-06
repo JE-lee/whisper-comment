@@ -194,3 +194,67 @@ export const moderateCommentsSchema = {
   tags: ['Comments'],
   body: moderateCommentsRequestSchema,
 };
+
+// 编辑评论请求 Schema
+const updateCommentRequestSchema = {
+  type: 'object',
+  properties: {
+    content: { type: 'string', minLength: 1, maxLength: 2000, description: '更新后的评论内容' },
+    authorToken: { type: 'string', description: '作者令牌，用于权限验证' },
+  },
+  required: ['content', 'authorToken'],
+};
+
+// 删除评论请求 Schema
+const deleteCommentRequestSchema = {
+  type: 'object',
+  properties: {
+    authorToken: { type: 'string', description: '作者令牌，用于权限验证' },
+  },
+  required: ['authorToken'],
+};
+
+// 编辑评论的 Schema
+export const updateCommentSchema = {
+  description: '编辑评论',
+  tags: ['Comments'],
+  params: commentByIdRequestSchema,
+  body: updateCommentRequestSchema,
+  response: {
+    200: {
+      ...baseSuccessResponseSchema,
+      properties: {
+        ...baseSuccessResponseSchema.properties,
+        data: commentResponseSchemaWithDefinitions,
+      },
+    },
+    400: baseErrorResponseSchema,
+    403: baseErrorResponseSchema,
+    404: baseErrorResponseSchema,
+  },
+};
+
+// 删除评论的 Schema
+export const deleteCommentSchema = {
+  description: '删除评论',
+  tags: ['Comments'],
+  params: commentByIdRequestSchema,
+  body: deleteCommentRequestSchema,
+  response: {
+    200: {
+      ...baseSuccessResponseSchema,
+      properties: {
+        ...baseSuccessResponseSchema.properties,
+        data: {
+          type: 'object',
+          properties: {
+            message: { type: 'string', description: '删除成功消息' },
+          },
+        },
+      },
+    },
+    400: baseErrorResponseSchema,
+    403: baseErrorResponseSchema,
+    404: baseErrorResponseSchema,
+  },
+};

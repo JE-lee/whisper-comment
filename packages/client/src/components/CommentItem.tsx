@@ -1,23 +1,38 @@
 import { useState } from 'preact/hooks'
-import { ThumbsUp, ThumbsDown, Reply, Clock, ChevronDown, ChevronRight } from './Icons'
+import { ThumbsUp, ThumbsDown, Reply, Clock, ChevronDown, ChevronRight, Edit, Trash2 } from './Icons'
 import { clsx } from 'clsx'
 import type { Comment, CreateCommentRequest, VoteRequest } from '../types/comment'
 import { CommentForm } from './CommentForm'
+import { IdentityService } from '../services/identity'
 
 interface CommentItemProps {
   comment: Comment
   onVote: (request: VoteRequest) => Promise<void>
   onReply: (request: CreateCommentRequest) => Promise<void>
+  onEdit?: (commentId: string, content: string) => Promise<void>
+  onDelete?: (commentId: string) => Promise<void>
   depth?: number
   parentAuthor?: string // 新增：被回复者的名字
 }
 
-export function CommentItem({ comment, onVote, onReply, depth = 0, parentAuthor }: CommentItemProps) {
+export function CommentItem({ comment, onVote, onReply, onEdit, onDelete, depth = 0, parentAuthor }: CommentItemProps) {
   const [showReplyForm, setShowReplyForm] = useState(false)
   const [isVoting, setIsVoting] = useState(false)
   const [animateAction, setAnimateAction] = useState<'like' | 'dislike' | null>(null)
   const [isExpanded, setIsExpanded] = useState(depth < 1) // 只有第一层默认展开
   const [isAnimating, setIsAnimating] = useState(false)
+  const [isEditing, setIsEditing] = useState(false)
+  const [editContent, setEditContent] = useState(comment.content)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+
+  // 检查是否为评论作者
+  const isAuthor = () => {
+    const userToken = IdentityService.getUserToken()
+    // 这里需要根据实际的身份验证逻辑来判断
+    // 暂时使用简单的昵称匹配，实际应该使用token验证
+    return userToken && comment.author === IdentityService.getUserNickname()
+  }
 
   // 格式化时间
   const formatTime = (timestamp: string) => {
@@ -101,6 +116,40 @@ export function CommentItem({ comment, onVote, onReply, depth = 0, parentAuthor 
     setShowReplyForm(false)
   }
 
+  // 处理编辑提交
+  const handleEditSubmit = async () => {
+    if (!onEdit || !editContent.trim()) return
+    
+    try {
+      await onEdit(comment.id, editContent.trim())
+      setIsEditing(false)
+    } catch (_error) {
+      // 编辑失败，恢复原内容
+      setEditContent(comment.content)
+    }
+  }
+
+  // 处理编辑取消
+  const handleEditCancel = () => {
+    setEditContent(comment.content)
+    setIsEditing(false)
+  }
+
+  // 处理删除确认
+  const handleDeleteConfirm = async () => {
+    if (!onDelete) return
+    
+    setIsDeleting(true)
+    try {
+      await onDelete(comment.id)
+      setShowDeleteConfirm(false)
+    } catch (_error) {
+      // 删除失败，保持确认对话框打开
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
   return (
     <div class="w-full animate-fade-in">
       {/* 主评论或回复容器 */}
@@ -160,18 +209,62 @@ export function CommentItem({ comment, onVote, onReply, depth = 0, parentAuthor 
               "text-left",
               depth === 0 ? "mb-2.5" : "mb-2"
             )}>
-              <p class={clsx(
-                'leading-relaxed whitespace-pre-wrap text-left',
-                depth === 0 ? 'text-sm' : 'text-xs'
-              )} style={{ color: 'var(--wc-text)' }}>
-                {/* 显示回复关系 - 在内容前面 */}
-                {depth > 0 && parentAuthor && (
-                  <span class="text-xs mr-1" style={{ color: 'var(--wc-text-secondary)' }}>
-                    回复 <span class="px-1 py-0.5 rounded" style={{ background: 'var(--wc-bg-secondary)', color: 'var(--wc-text)' }}>{parentAuthor}</span>
-                  </span>
-                )}
-                {comment.content}
-              </p>
+              {isEditing ? (
+                <div class="space-y-2">
+                  <textarea
+                    value={editContent}
+                    onInput={(e) => setEditContent((e.target as HTMLTextAreaElement).value)}
+                    class={clsx(
+                      'w-full p-2 border rounded resize-none focus:outline-none focus:ring-2',
+                      depth === 0 ? 'text-sm' : 'text-xs'
+                    )}
+                    style={{
+                      background: 'var(--wc-bg)',
+                      borderColor: 'var(--wc-border)',
+                      color: 'var(--wc-text)',
+                      focusRingColor: 'var(--wc-primary)'
+                    }}
+                    rows={3}
+                    placeholder="编辑评论内容..."
+                  />
+                  <div class="flex items-center space-x-2">
+                    <button
+                      onClick={handleEditSubmit}
+                      disabled={!editContent.trim()}
+                      class="px-3 py-1 text-xs rounded font-medium transition-colors"
+                      style={{
+                        background: 'var(--wc-primary)',
+                        color: 'white'
+                      }}
+                    >
+                      保存
+                    </button>
+                    <button
+                      onClick={handleEditCancel}
+                      class="px-3 py-1 text-xs rounded font-medium transition-colors"
+                      style={{
+                        background: 'var(--wc-bg-secondary)',
+                        color: 'var(--wc-text-secondary)'
+                      }}
+                    >
+                      取消
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <p class={clsx(
+                  'leading-relaxed whitespace-pre-wrap text-left',
+                  depth === 0 ? 'text-sm' : 'text-xs'
+                )} style={{ color: 'var(--wc-text)' }}>
+                  {/* 显示回复关系 - 在内容前面 */}
+                  {depth > 0 && parentAuthor && (
+                    <span class="text-xs mr-1" style={{ color: 'var(--wc-text-secondary)' }}>
+                      回复 <span class="px-1 py-0.5 rounded" style={{ background: 'var(--wc-bg-secondary)', color: 'var(--wc-text)' }}>{parentAuthor}</span>
+                    </span>
+                  )}
+                  {comment.content}
+                </p>
+              )}
             </div>
             {/* 操作按钮 - 优化紧凑布局 */}
             <div class="flex items-center justify-between">
@@ -246,6 +339,52 @@ export function CommentItem({ comment, onVote, onReply, depth = 0, parentAuthor 
                     depth > 0 && "text-xs"
                   )}>回复</span>
                 </button>
+                {/* 编辑按钮 - 只有作者可见 */}
+                {isAuthor() && onEdit && (
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    disabled={isEditing}
+                    aria-label="编辑评论"
+                    title="编辑评论"
+                    class={clsx(
+                      'flex items-center space-x-0 sm:space-x-1 rounded font-medium transition-all duration-200',
+                      depth === 0 ? 'px-1.5 sm:px-2 py-1 text-sm' : 'px-1 py-0.5 text-xs',
+                      isEditing && 'opacity-50 cursor-not-allowed'
+                    )}
+                    style={{ color: 'var(--wc-text-secondary)', background: isEditing ? 'var(--wc-bg-secondary)' : 'transparent' }}
+                  >
+                    <Edit class={clsx(
+                      depth === 0 ? 'h-4 w-4' : 'h-3 w-3'
+                    )} />
+                    <span class={clsx(
+                      "hidden sm:inline",
+                      depth > 0 && "text-xs"
+                    )}>编辑</span>
+                  </button>
+                )}
+                {/* 删除按钮 - 只有作者可见 */}
+                {isAuthor() && onDelete && (
+                  <button
+                    onClick={() => setShowDeleteConfirm(true)}
+                    disabled={isDeleting}
+                    aria-label="删除评论"
+                    title="删除评论"
+                    class={clsx(
+                      'flex items-center space-x-0 sm:space-x-1 rounded font-medium transition-all duration-200',
+                      depth === 0 ? 'px-1.5 sm:px-2 py-1 text-sm' : 'px-1 py-0.5 text-xs',
+                      isDeleting && 'opacity-50 cursor-not-allowed'
+                    )}
+                    style={{ color: 'var(--wc-danger)', background: 'transparent' }}
+                  >
+                    <Trash2 class={clsx(
+                      depth === 0 ? 'h-4 w-4' : 'h-3 w-3'
+                    )} />
+                    <span class={clsx(
+                      "hidden sm:inline",
+                      depth > 0 && "text-xs"
+                    )}>删除</span>
+                  </button>
+                )}
               </div>
               {/* 展开/收起按钮 - 只在第一层且有回复时显示 */}
               {depth === 0 && totalReplies > 0 && (
@@ -287,6 +426,42 @@ export function CommentItem({ comment, onVote, onReply, depth = 0, parentAuthor 
               </div>
             </div>
           )}
+
+          {/* 删除确认对话框 */}
+          {showDeleteConfirm && (
+            <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fade-in">
+              <div class="bg-white rounded-lg p-6 max-w-sm mx-4 animate-slide-up" style={{ background: 'var(--wc-bg)', borderColor: 'var(--wc-border)' }}>
+                <h3 class="text-lg font-medium mb-4" style={{ color: 'var(--wc-text)' }}>确认删除</h3>
+                <p class="text-sm mb-6" style={{ color: 'var(--wc-text-secondary)' }}>
+                  确定要删除这条评论吗？此操作无法撤销。
+                </p>
+                <div class="flex space-x-3">
+                  <button
+                    onClick={() => setShowDeleteConfirm(false)}
+                    disabled={isDeleting}
+                    class="flex-1 px-4 py-2 text-sm font-medium rounded transition-colors"
+                    style={{
+                      background: 'var(--wc-bg-secondary)',
+                      color: 'var(--wc-text-secondary)'
+                    }}
+                  >
+                    取消
+                  </button>
+                  <button
+                    onClick={handleDeleteConfirm}
+                    disabled={isDeleting}
+                    class="flex-1 px-4 py-2 text-sm font-medium rounded transition-colors"
+                    style={{
+                      background: 'var(--wc-danger)',
+                      color: 'white'
+                    }}
+                  >
+                    {isDeleting ? '删除中...' : '确认删除'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
           
           {/* 回复列表 - 只在第一层显示，且将所有回复扁平化显示 */}
           {depth === 0 && allRepliesWithParent.length > 0 && (
@@ -306,6 +481,8 @@ export function CommentItem({ comment, onVote, onReply, depth = 0, parentAuthor 
                     comment={reply}
                     onVote={onVote}
                     onReply={onReply}
+                    onEdit={onEdit}
+                    onDelete={onDelete}
                     depth={1}
                     parentAuthor={reply.parentAuthor}
                   />

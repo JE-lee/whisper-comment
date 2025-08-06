@@ -58,6 +58,26 @@ export function Comments({ className = '', title = '评论区' }: CommentsProps)
     }
   }
 
+  // 处理编辑评论
+  const handleEditComment = async (commentId: string, content: string) => {
+    try {
+      const updatedComment = await commentService.updateComment(commentId, content)
+      updateCommentInList(updatedComment)
+    } catch (_err) {
+      throw new Error('编辑评论失败，请稍后重试')
+    }
+  }
+
+  // 处理删除评论
+  const handleDeleteComment = async (commentId: string) => {
+    try {
+      await commentService.deleteComment(commentId)
+      removeCommentFromList(commentId)
+    } catch (_err) {
+      throw new Error('删除评论失败，请稍后重试')
+    }
+  }
+
   // 更新评论列表中的特定评论的投票信息
   const updateCommentVotes = (voteResult: { commentId: string; likes: number; dislikes: number; userAction: string | null }): void => {
     const updateComments = (comments: Comment[]): Comment[] => {
@@ -81,6 +101,46 @@ export function Comments({ className = '', title = '评论区' }: CommentsProps)
     }
     
     setComments(prevComments => updateComments(prevComments))
+  }
+
+  // 更新评论列表中的特定评论内容
+  const updateCommentInList = (updatedComment: Comment): void => {
+    const updateComments = (comments: Comment[]): Comment[] => {
+      return comments.map(comment => {
+        if (comment.id === updatedComment.id) {
+          return {
+            ...comment,
+            content: updatedComment.content
+          }
+        }
+        if (comment.replies && comment.replies.length > 0) {
+          return {
+            ...comment,
+            replies: updateComments(comment.replies)
+          }
+        }
+        return comment
+      })
+    }
+    
+    setComments(prevComments => updateComments(prevComments))
+  }
+
+  // 从评论列表中移除特定评论
+  const removeCommentFromList = (commentId: string): void => {
+    const filterComments = (comments: Comment[]): Comment[] => {
+      return comments.filter(comment => {
+        if (comment.id === commentId) {
+          return false
+        }
+        if (comment.replies && comment.replies.length > 0) {
+          comment.replies = filterComments(comment.replies)
+        }
+        return true
+      })
+    }
+    
+    setComments(prevComments => filterComments(prevComments))
   }
 
 
@@ -149,6 +209,8 @@ export function Comments({ className = '', title = '评论区' }: CommentsProps)
             loading={loading}
             onVote={handleVote}
             onReply={handleCreateComment}
+            onEdit={handleEditComment}
+            onDelete={handleDeleteComment}
           />
         )}
       </div>

@@ -165,5 +165,40 @@ export const commentService = {
     } catch (_error) {
       throw new Error('投票失败，请稍后重试')
     }
+  },
+
+  // 编辑评论
+  async updateComment(commentId: string, content: string): Promise<Comment> {
+    try {
+      const updateData = {
+        content,
+        authorToken: getUserToken()
+      }
+      
+      const response = await apiRequest<ServerComment>(`/comments/${commentId}`, {
+        method: 'PUT',
+        body: JSON.stringify(updateData)
+      })
+      
+      return transformServerComment(response)
+    } catch (_error) {
+      throw new Error('编辑评论失败，请稍后重试')
+    }
+  },
+
+  // 删除评论
+  async deleteComment(commentId: string): Promise<void> {
+    try {
+      const deleteData = {
+        authorToken: getUserToken()
+      }
+      
+      await apiRequest<{ success: boolean }>(`/comments/${commentId}`, {
+        method: 'DELETE',
+        body: JSON.stringify(deleteData)
+      })
+    } catch (_error) {
+      throw new Error('删除评论失败，请稍后重试')
+    }
   }
 }

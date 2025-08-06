@@ -8,9 +8,11 @@ interface CommentListProps {
   loading?: boolean
   onVote: (request: VoteRequest) => Promise<void>
   onReply: (request: CreateCommentRequest) => Promise<void>
+  onEdit?: (commentId: string, content: string) => Promise<void>
+  onDelete?: (commentId: string) => Promise<void>
 }
 
-export function CommentList({ comments, loading, onVote, onReply }: CommentListProps) {
+export function CommentList({ comments, loading, onVote, onReply, onEdit, onDelete }: CommentListProps) {
   if (loading) {
     return (
       <div class="space-y-4">
@@ -69,6 +71,8 @@ export function CommentList({ comments, loading, onVote, onReply }: CommentListP
               comment={comment}
               onVote={onVote}
               onReply={onReply}
+              onEdit={onEdit}
+              onDelete={onDelete}
               depth={0}
             />
           </div>
@@ -76,4 +80,4 @@ export function CommentList({ comments, loading, onVote, onReply }: CommentListP
       </div>
     </div>
   )
-} 
+}

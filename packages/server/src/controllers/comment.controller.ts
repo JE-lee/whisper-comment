@@ -40,6 +40,15 @@ interface CreateCommentInput {
   content: string;
 }
 
+interface UpdateCommentInput {
+  content: string;
+  authorToken: string;
+}
+
+interface DeleteCommentInput {
+  authorToken: string;
+}
+
 
 
 export class CommentController {
@@ -188,6 +197,52 @@ export class CommentController {
       });
 
       const response = createSuccessResponse(result);
+      return reply.code(200).send(response);
+    } catch (error) {
+      return this.handleError(error, reply);
+    }
+  }
+
+  /**
+   * 编辑评论
+   * PUT /api/comments/:commentId
+   */
+  async updateComment(
+    request: FastifyRequest<{ Params: CommentIdParamInput; Body: UpdateCommentInput }>,
+    reply: FastifyReply
+  ): Promise<ApiResponse<CommentResponse>> {
+    try {
+      const { commentId } = request.params;
+      const { content, authorToken } = request.body;
+
+      // 调用服务层
+      const comment = await this.commentService.updateComment(commentId, content, authorToken);
+
+      const response = createSuccessResponse(comment);
+      return reply.code(200).send(response);
+    } catch (error) {
+      return this.handleError(error, reply);
+    }
+  }
+
+  /**
+   * 删除评论
+   * DELETE /api/comments/:commentId
+   */
+  async deleteComment(
+    request: FastifyRequest<{ Params: CommentIdParamInput; Body: DeleteCommentInput }>,
+    reply: FastifyReply
+  ): Promise<ApiResponse<{ message: string }>> {
+    try {
+      const { commentId } = request.params;
+      const { authorToken } = request.body;
+
+      // 调用服务层
+      await this.commentService.deleteComment(commentId, authorToken);
+
+      const response = createSuccessResponse({
+        message: 'Comment deleted successfully',
+      });
       return reply.code(200).send(response);
     } catch (error) {
       return this.handleError(error, reply);

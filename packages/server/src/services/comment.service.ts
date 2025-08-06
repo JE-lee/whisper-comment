@@ -6,6 +6,7 @@ import { NotificationService } from './notification.service';
 import { FilterService } from './filter.service';
 import { FilterAction } from '../types/filter';
 import { PrismaClient } from '@prisma/client';
+import { NotFoundError } from '../utils/errors';
 
 import { CommentWithRelations } from '../types/comment';
 
@@ -259,6 +260,107 @@ export class CommentService {
       dislikes: updatedComment.dislikes || 0,
       userAction: data.voteType, // 返回当前投票类型
     };
+  }
+
+  /**
+   * 编辑评论
+   */
+  async updateComment(commentId: string, content: string, authorToken: string): Promise<CommentResponse> {
+    // 验证评论是否存在
+    const comment = await this.commentRepository.findById(commentId);
+    if (!comment) {
+      throw new NotFoundError('Comment');
+    }
+
+    // 验证权限：只有评论作者可以编辑
+    if (comment.authorToken !== authorToken) {
+      throw new Error('Unauthorized: You can only edit your own comments');
+    }
+
+    // 验证评论状态：只有已通过或待审核的评论可以编辑
+    if (comment.status === CommentStatus.REJECTED || comment.status === CommentStatus.SPAM) {
+      throw new Error('Cannot edit rejected or spam comments');
+    }
+
+    // 内容过滤
+    const filterResult = await this.filterService.filterContent(content, comment.siteId);
+    
+    // 根据过滤结果确定评论状态和内容
+    let commentStatus = comment.status; // 保持原状态
+    let finalContent = content;
+    
+    if (filterResult.isFiltered) {
+      switch (filterResult.action) {
+        case FilterAction.REJECT:
+          commentStatus = CommentStatus.REJECTED;
+          break;
+        case FilterAction.PENDING:
+          commentStatus = CommentStatus.PENDING;
+          break;
+        case FilterAction.REPLACE:
+          finalContent = filterResult.filteredContent || content;
+          break;
+        case FilterAction.WARNING:
+          // 仅记录日志，不改变状态
+          break;
+      }
+    }
+    
+    // 基础内容清理
+    finalContent = this.sanitizeContent(finalContent);
+
+    // 更新评论
+    const updatedComment = await this.commentRepository.update(commentId, {
+      content: finalContent,
+      status: commentStatus,
+    });
+
+    // 记录过滤日志
+    if (filterResult.isFiltered) {
+      for (const matchedFilter of filterResult.matchedFilters) {
+        try {
+          await this.filterService.logFilter(
+            commentId,
+            matchedFilter.filterId,
+            content,
+            finalContent !== content ? finalContent : undefined,
+            matchedFilter.action,
+            matchedFilter.keyword
+          );
+        } catch (error) {
+          console.error('Failed to log filter result:', error);
+        }
+      }
+    }
+
+    // 转换为 API 响应格式
+    return this.transformToResponse(updatedComment as CommentWithRelations);
+  }
+
+  /**
+   * 删除评论（软删除）
+   */
+  async deleteComment(commentId: string, authorToken: string): Promise<void> {
+    // 验证评论是否存在
+    const comment = await this.commentRepository.findById(commentId);
+    if (!comment) {
+      throw new NotFoundError('Comment');
+    }
+
+    // 验证权限：只有评论作者可以删除
+    if (comment.authorToken !== authorToken) {
+      throw new Error('Unauthorized: You can only delete your own comments');
+    }
+
+    // 验证评论状态：已删除的评论不能再次删除
+    if (comment.status === CommentStatus.SPAM) {
+      throw new Error('Comment is already deleted');
+    }
+
+    // 软删除：将状态设置为SPAM（表示删除）
+    await this.commentRepository.update(commentId, {
+      status: CommentStatus.SPAM,
+    });
   }
 
   /**
