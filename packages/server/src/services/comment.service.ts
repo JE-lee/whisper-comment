@@ -3,14 +3,22 @@ import { SiteRepository } from '../repositories/site.repository';
 import { CommentListQuery, CommentResponse, CommentListResponse, CommentStatus, CreateCommentData, VoteCommentData, VoteResponse, VoteType } from '../types/comment';
 import { PaginationParams, PaginationInfo } from '../types/common';
 import { NotificationService } from './notification.service';
+import { FilterService } from './filter.service';
+import { FilterAction } from '../types/filter';
+import { PrismaClient } from '@prisma/client';
 
 import { CommentWithRelations } from '../types/comment';
 
 export class CommentService {
+  private filterService: FilterService;
+
   constructor(
     private commentRepository: CommentRepository,
-    private siteRepository: SiteRepository
-  ) {}
+    private siteRepository: SiteRepository,
+    private prisma: PrismaClient
+  ) {
+    this.filterService = new FilterService(this.prisma);
+  }
 
   /**
    * 获取评论列表
@@ -60,20 +68,63 @@ export class CommentService {
     // 确保站点存在，如果不存在则创建默认站点
     await this.siteRepository.getOrCreateDefault(data.siteId);
     
-    // 内容过滤
-    const sanitizedContent = this.sanitizeContent(data.content);
+    // 关键词过滤
+    const filterResult = await this.filterService.filterContent(data.content, data.siteId);
+    
+    // 根据过滤结果确定评论状态和内容
+    let commentStatus = CommentStatus.APPROVED; // 默认通过
+    let finalContent = data.content;
+    
+    if (filterResult.isFiltered) {
+      switch (filterResult.action) {
+        case FilterAction.REJECT:
+          commentStatus = CommentStatus.REJECTED;
+          break;
+        case FilterAction.PENDING:
+          commentStatus = CommentStatus.PENDING;
+          break;
+        case FilterAction.REPLACE:
+          finalContent = filterResult.filteredContent || data.content;
+          break;
+        case FilterAction.WARNING:
+          // 仅记录日志，不改变状态
+          break;
+      }
+    }
+    
+    // 基础内容清理
+    finalContent = this.sanitizeContent(finalContent);
     
     // 创建评论数据
     const commentData = {
       ...data,
-      content: sanitizedContent,
+      content: finalContent,
+      status: commentStatus,
     };
 
     // 调用 Repository 创建评论
     const comment = await this.commentRepository.create(commentData);
 
-    // 如果是回复评论，发送回复通知
-    if (comment.parentId) {
+    // 记录过滤日志
+    if (filterResult.isFiltered) {
+      for (const matchedFilter of filterResult.matchedFilters) {
+        try {
+          await this.filterService.logFilter(
+            comment.commentId,
+            matchedFilter.filterId,
+            data.content,
+            finalContent !== data.content ? finalContent : undefined,
+            matchedFilter.action,
+            matchedFilter.keyword
+          );
+        } catch (error) {
+          console.error('Failed to log filter result:', error);
+        }
+      }
+    }
+
+    // 如果是回复评论且评论通过审核，发送回复通知
+    if (comment.parentId && commentStatus === CommentStatus.APPROVED) {
       try {
         await NotificationService.sendCommentReplyNotification({
           commentId: comment.commentId,
@@ -91,7 +142,7 @@ export class CommentService {
     }
 
     // 转换为 API 响应格式
-    return this.transformToResponse(comment);
+    return this.transformToResponse(comment as CommentWithRelations);
   }
 
   /**
@@ -124,7 +175,7 @@ export class CommentService {
   /**
    * 将数据库模型转换为 API 响应格式
    */
-  private transformToResponse(comment: any, userVotes: Record<string, VoteType | null> = {}): CommentResponse {
+  private transformToResponse(comment: CommentWithRelations, userVotes: Record<string, VoteType | null> = {}): CommentResponse {
     const result: CommentResponse = {
       commentId: comment.commentId,
       siteId: comment.siteId,
@@ -137,7 +188,7 @@ export class CommentService {
       dislikes: comment.dislikes || 0,
       userAction: userVotes[comment.commentId] || null,
       createdAt: comment.createdAt,
-      replies: comment.replies ? comment.replies.map((reply: any) => this.transformToResponse(reply, userVotes)) : [],
+      replies: comment.replies ? comment.replies.map((reply: CommentWithRelations) => this.transformToResponse(reply, userVotes)) : [],
     };
     
     // 强制确保replies字段存在
@@ -174,12 +225,18 @@ export class CommentService {
   }
 
   /**
-   * 过滤敏感内容
+   * 基础内容清理
+   * 移除恶意脚本、多余空格等
    */
   private sanitizeContent(content: string): string {
-    // 这里可以添加内容过滤逻辑
-    // 例如移除恶意脚本、敏感词汇等
-    return content.trim();
+    // 移除HTML标签和脚本
+    const cleanContent = content
+      .replace(/<script[^>]*>.*?<\/script>/gi, '')
+      .replace(/<[^>]*>/g, '')
+      .trim();
+    
+    // 限制连续空行
+    return cleanContent.replace(/\n{3,}/g, '\n\n');
   }
 
   /**
@@ -210,8 +267,8 @@ export class CommentService {
   private getAllCommentIds(comments: CommentWithRelations[]): string[] {
     const ids: string[] = [];
     
-    const collectIds = (commentList: any[]) => {
-      commentList.forEach((comment: any) => {
+    const collectIds = (commentList: CommentWithRelations[]) => {
+      commentList.forEach((comment: CommentWithRelations) => {
         ids.push(comment.commentId);
         if (comment.replies && comment.replies.length > 0) {
           collectIds(comment.replies);

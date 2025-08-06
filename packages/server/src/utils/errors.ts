@@ -9,7 +9,7 @@ export class AppError extends Error {
     public code: string,
     public message: string,
     public statusCode: number = 400,
-    public details?: any
+    public details?: unknown
   ) {
     super(message);
     this.name = 'AppError';
@@ -20,7 +20,7 @@ export class AppError extends Error {
  * 验证错误类
  */
 export class ValidationError extends AppError {
-  constructor(message: string, details?: any) {
+  constructor(message: string, details?: unknown) {
     super('VALIDATION_ERROR', message, 400, details);
   }
 }
@@ -55,12 +55,12 @@ export class ForbiddenError extends AppError {
 /**
  * 统一错误处理函数
  */
-export function handleError(error: any, reply: FastifyReply): FastifyReply {
+export function handleError(error: unknown, reply: FastifyReply): FastifyReply {
   // 记录错误日志
   console.error('Application Error:', {
-    name: error.name,
-    message: error.message,
-    stack: error.stack,
+    name: (error as Error).name,
+    message: (error as Error).message,
+    stack: (error as Error).stack,
     timestamp: new Date().toISOString(),
   });
 
@@ -81,13 +81,13 @@ export function handleError(error: any, reply: FastifyReply): FastifyReply {
   }
 
   // Zod 验证错误
-  if (error.name === 'ZodError') {
+  if ((error as any).name === 'ZodError') {
     const response: ApiResponse = {
       success: false,
       error: {
         code: 'VALIDATION_ERROR',
         message: 'Invalid request parameters',
-        details: error.errors,
+        details: (error as any).errors,
       },
       meta: {
         timestamp: new Date().toISOString(),
@@ -97,13 +97,13 @@ export function handleError(error: any, reply: FastifyReply): FastifyReply {
   }
 
   // Fastify 验证错误
-  if (error.validation) {
+  if ((error as any).validation) {
     const response: ApiResponse = {
       success: false,
       error: {
         code: 'VALIDATION_ERROR',
         message: 'Invalid request parameters',
-        details: error.validation,
+        details: (error as any).validation,
       },
       meta: {
         timestamp: new Date().toISOString(),
@@ -113,12 +113,12 @@ export function handleError(error: any, reply: FastifyReply): FastifyReply {
   }
 
   // Prisma 错误
-  if (error.code && error.code.startsWith('P')) {
+  if ((error as any).code && (error as any).code.startsWith('P')) {
     let message = 'Database operation failed';
     let statusCode = 500;
 
     // 处理常见的 Prisma 错误
-    switch (error.code) {
+    switch ((error as any).code) {
       case 'P2002':
         message = 'Unique constraint violation';
         statusCode = 409;
@@ -138,7 +138,7 @@ export function handleError(error: any, reply: FastifyReply): FastifyReply {
       error: {
         code: 'DATABASE_ERROR',
         message,
-        details: process.env.NODE_ENV === 'development' ? error.meta : undefined,
+        details: process.env.NODE_ENV === 'development' ? (error as any).meta : undefined,
       },
       meta: {
         timestamp: new Date().toISOString(),
@@ -153,7 +153,7 @@ export function handleError(error: any, reply: FastifyReply): FastifyReply {
     error: {
       code: 'INTERNAL_ERROR',
       message: 'An unexpected error occurred',
-      details: process.env.NODE_ENV === 'development' ? error.message : undefined,
+      details: process.env.NODE_ENV === 'development' ? (error as Error).message : undefined,
     },
     meta: {
       timestamp: new Date().toISOString(),

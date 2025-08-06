@@ -47,10 +47,10 @@ class WebSocketManager {
   /**
    * 发送消息给特定用户
    */
-  private async sendToUser(userToken: string, message: any) {
+  private async sendToUser(userToken: string, message: unknown) {
     console.log('[WebSocketManager] 尝试发送消息给用户:', {
       targetUserToken: userToken,
-      messageType: message.type
+      messageType: (message as any).type
     });
     
     const connectionId = await RedisManager.getConnectionId(userToken);
@@ -63,11 +63,11 @@ class WebSocketManager {
     if (connectionId && this.connections.has(connectionId)) {
       const socket = this.connections.get(connectionId)!;
       try {
-        socket.send(JSON.stringify(message));
+        socket.send(JSON.stringify(message as any));
         console.log('[WebSocketManager] 消息发送成功:', {
           userToken,
           connectionId,
-          messageType: message.type
+          messageType: (message as any).type
         });
       } catch (error) {
         console.error('[WebSocketManager] 消息发送失败:', {
@@ -95,13 +95,13 @@ class WebSocketManager {
   /**
    * 广播消息给页面上的所有用户
    */
-  private async broadcastToPage(pageIdentifier: string, message: any) {
+  private async broadcastToPage(pageIdentifier: string, message: unknown) {
     // 遍历所有连接，发送给相关页面的用户
     for (const [connectionId, socket] of this.connections) {
       try {
         // 这里可以根据需要添加页面过滤逻辑
         // 目前简单广播给所有连接的用户
-        socket.send(JSON.stringify(message));
+        socket.send(JSON.stringify(message as any));
       } catch (error) {
         this.fastify.log.error(`Failed to broadcast to connection ${connectionId}:`, error);
         // 连接可能已断开，清理连接
@@ -177,8 +177,8 @@ export async function registerWebSocketRoutes(fastify: FastifyInstance) {
   
   // WebSocket 路由
   fastify.register(async function (fastify) {
-    fastify.get('/ws', { websocket: true } as any, async (sock: any) => {
-      const socket = sock as unknown as WebSocket
+    fastify.get('/ws', { websocket: true }, async (sock: any) => {
+      const socket = sock as WebSocket
       let connectionId: string | null = null;
       let userToken: string | null = null;
       
@@ -187,7 +187,7 @@ export async function registerWebSocketRoutes(fastify: FastifyInstance) {
       // 监听消息
       socket.on('message', async (message: Buffer) => {
         try {
-          const data = JSON.parse(message.toString());
+          const data = JSON.parse((message as any).toString());
           
           if (data.type === 'auth' && data.userToken) {
             // 用户认证
@@ -232,8 +232,8 @@ export async function registerWebSocketRoutes(fastify: FastifyInstance) {
       });
       
       // 监听错误
-      socket.on('error', async (error: any) => {
-        fastify.log.error('WebSocket error:', error);
+      socket.on('error', async (error: unknown) => {
+        fastify.log.error('WebSocket error:', error as any);
         if (connectionId) {
           await wsManager.removeConnection(connectionId);
         }

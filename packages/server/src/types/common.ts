@@ -21,14 +21,14 @@ export interface SortParams<T = string> {
 }
 
 // API 响应基础结构
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;
   statusCode?: number;
   error?: {
     code: string;
     message: string;
-    details?: any;
+    details?: unknown;
   };
   meta?: {
     timestamp: string;
@@ -47,5 +47,5 @@ export interface AppError {
   code: string;
   message: string;
   statusCode: number;
-  details?: any;
+  details?: unknown;
 }

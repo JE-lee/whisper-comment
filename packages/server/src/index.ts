@@ -28,7 +28,7 @@ const fastify: FastifyInstance = Fastify({
 });
 
 // 直接在主实例上注册响应格式化装饰器
-fastify.decorateReply('success', function(data: any, statusCode: number = 200) {
+fastify.decorateReply('success', function(data: unknown, statusCode: number = 200) {
   const requestId = this.request.requestContext?.get('requestId');
   
   const response = {
@@ -45,7 +45,7 @@ fastify.decorateReply('success', function(data: any, statusCode: number = 200) {
   return this.send(response);
 });
 
-fastify.decorateReply('error', function(code: string, message: string, statusCode: number = 400, details?: any) {
+fastify.decorateReply('error', function(code: string, message: string, statusCode: number = 400, details?: unknown) {
   const requestId = this.request.requestContext?.get('requestId');
   
   const response = {
@@ -65,7 +65,7 @@ fastify.decorateReply('error', function(code: string, message: string, statusCod
   return this.send(response);
 });
 
-fastify.decorateReply('paginated', function(items: any[], pagination: any, statusCode: number = 200) {
+fastify.decorateReply('paginated', function(items: unknown[], pagination: unknown, statusCode: number = 200) {
   const requestId = this.request.requestContext?.get('requestId');
   
   const listData = {

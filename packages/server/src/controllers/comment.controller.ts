@@ -197,7 +197,7 @@ export class CommentController {
   /**
    * 错误处理
    */
-  private handleError(error: any, reply: FastifyReply): FastifyReply {
+  private handleError(error: unknown, reply: FastifyReply): FastifyReply {
     return handleError(error, reply);
   }
 }

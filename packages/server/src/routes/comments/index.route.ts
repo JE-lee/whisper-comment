@@ -16,7 +16,7 @@ import { voteCommentSchema } from '../../schemas/vote';
 // 依赖注入：创建实例
 const commentRepository = new CommentRepository(prisma);
 const siteRepository = new SiteRepository(prisma);
-const commentService = new CommentService(commentRepository, siteRepository);
+const commentService = new CommentService(commentRepository, siteRepository, prisma);
 const commentController = new CommentController(commentService);
 
 export async function commentRoutes(

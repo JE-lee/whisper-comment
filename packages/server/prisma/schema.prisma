@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -10,81 +7,108 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// 存储客户网站信息
 model Site {
-  siteId    String   @id @default(uuid()) @map("site_id") @db.Uuid
-  ownerId   String   @map("owner_id") @db.Uuid
-  domain    String   @unique @db.VarChar(255)
-  apiKey    String   @unique @map("api_key") @db.VarChar(64)
-  settings  Json?    // 存储外观定制、反垃圾设置等
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
-
-  // 关联关系
-  comments Comment[]
+  siteId         String          @id @default(uuid()) @map("site_id") @db.Uuid
+  ownerId        String          @map("owner_id") @db.Uuid
+  domain         String          @unique @db.VarChar(255)
+  apiKey         String          @unique @map("api_key") @db.VarChar(64)
+  settings       Json?
+  createdAt      DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  comments       Comment[]
+  keywordFilters KeywordFilter[]
 
   @@map("sites")
 }
 
-// 存储评论信息
 model Comment {
-  commentId      String   @id @default(uuid()) @map("comment_id") @db.Uuid
-  siteId         String   @map("site_id") @db.Uuid
-  pageIdentifier String   @map("page_identifier") @db.Text
-  parentId       String?  @map("parent_id") @db.Uuid
-  authorToken    String   @map("author_token") @db.Text
-  authorNickname String   @map("author_nickname") @db.VarChar(50)
-  content        String   @db.Text
-  status         Int      @default(0) @db.SmallInt // 0: pending, 1: approved, 2: rejected, 3: spam
-  likes          Int      @default(0) @db.Integer // 点赞数
-  dislikes       Int      @default(0) @db.Integer // 踩数
-  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+  commentId      String        @id @default(uuid()) @map("comment_id") @db.Uuid
+  siteId         String        @map("site_id") @db.Uuid
+  pageIdentifier String        @map("page_identifier")
+  parentId       String?       @map("parent_id") @db.Uuid
+  authorToken    String        @map("author_token")
+  authorNickname String        @map("author_nickname") @db.VarChar(50)
+  content        String
+  status         Int           @default(0) @db.SmallInt
+  likes          Int           @default(0)
+  dislikes       Int           @default(0)
+  createdAt      DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  votes          CommentVote[]
+  parent         Comment?      @relation("CommentReplies", fields: [parentId], references: [commentId])
+  replies        Comment[]     @relation("CommentReplies")
+  site           Site          @relation(fields: [siteId], references: [siteId])
+  filterLogs     FilterLog[]
 
-  // 关联关系
-  site   Site      @relation(fields: [siteId], references: [siteId])
-  parent Comment?  @relation("CommentReplies", fields: [parentId], references: [commentId])
-  replies Comment[] @relation("CommentReplies")
-  votes  CommentVote[] // 投票记录
-
-  // 索引
   @@index([siteId, pageIdentifier], map: "idx_comments_page_identifier")
   @@index([authorToken], map: "idx_comments_author_token")
   @@map("comments")
 }
 
-// 存储浏览器推送订阅信息
 model PushSubscription {
   subscriptionId Int      @id @default(autoincrement()) @map("subscription_id")
-  authorToken    String   @map("author_token") @db.Text
-  endpoint       String   @unique @db.Text
-  keys           Json     // 存储p256dh和auth密钥
-  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+  authorToken    String   @map("author_token")
+  endpoint       String   @unique
+  keys           Json
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
   @@map("push_subscriptions")
 }
 
-// 存储DID身份与匿名身份的关联
 model DidAssociation {
-  authorToken String   @id @map("author_token") @db.Text
+  authorToken String   @id @map("author_token")
   didAddress  String   @unique @map("did_address") @db.VarChar(255)
-  didType     String   @map("did_type") @db.VarChar(20) // e.g., 'eip155' for Ethereum
-  linkedAt    DateTime @default(now()) @map("linked_at") @db.Timestamptz
+  didType     String   @map("did_type") @db.VarChar(20)
+  linkedAt    DateTime @default(now()) @map("linked_at") @db.Timestamptz(6)
 
   @@map("did_associations")
 }
 
-// 存储评论投票记录
 model CommentVote {
   voteId      Int      @id @default(autoincrement()) @map("vote_id")
   commentId   String   @map("comment_id") @db.Uuid
-  authorToken String   @map("author_token") @db.Text
-  voteType    String   @map("vote_type") @db.VarChar(10) // 'like' or 'dislike'
-  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+  authorToken String   @map("author_token")
+  voteType    String   @map("vote_type") @db.VarChar(10)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  comment     Comment  @relation(fields: [commentId], references: [commentId], onDelete: Cascade)
 
-  // 关联关系
-  comment Comment @relation(fields: [commentId], references: [commentId], onDelete: Cascade)
-
-  // 确保同一用户对同一评论只能投票一次
   @@unique([commentId, authorToken], map: "unique_comment_author_vote")
   @@index([authorToken], map: "idx_votes_author_token")
   @@map("comment_votes")
+}
+
+model KeywordFilter {
+  filterId    Int         @id @default(autoincrement()) @map("filter_id")
+  siteId      String?     @map("site_id") @db.Uuid
+  keyword     String      @db.VarChar(100)
+  matchType   String      @map("match_type") @db.VarChar(20)
+  action      String      @db.VarChar(20)
+  severity    String      @db.VarChar(20)
+  replacement String?     @db.VarChar(100)
+  isActive    Boolean     @default(true) @map("is_active")
+  createdAt   DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime    @updatedAt @map("updated_at") @db.Timestamptz(6)
+  logs        FilterLog[]
+  site        Site?       @relation(fields: [siteId], references: [siteId])
+
+  @@index([siteId], map: "idx_keyword_filters_site_id")
+  @@index([keyword], map: "idx_keyword_filters_keyword")
+  @@index([isActive], map: "idx_keyword_filters_is_active")
+  @@map("keyword_filters")
+}
+
+model FilterLog {
+  logId          Int           @id @default(autoincrement()) @map("log_id")
+  commentId      String        @map("comment_id") @db.Uuid
+  filterId       Int           @map("filter_id")
+  originalText   String        @map("original_text")
+  filteredText   String?       @map("filtered_text")
+  action         String        @db.VarChar(20)
+  matchedKeyword String        @map("matched_keyword") @db.VarChar(100)
+  createdAt      DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  comment        Comment       @relation(fields: [commentId], references: [commentId], onDelete: Cascade)
+  filter         KeywordFilter @relation(fields: [filterId], references: [filterId])
+
+  @@index([commentId], map: "idx_filter_logs_comment_id")
+  @@index([filterId], map: "idx_filter_logs_filter_id")
+  @@index([createdAt], map: "idx_filter_logs_created_at")
+  @@map("filter_logs")
 }

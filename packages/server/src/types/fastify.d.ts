@@ -3,7 +3,7 @@ import { PaginationInfo } from './api';
 declare module 'fastify' {
   interface FastifyReply {
     success<T>(data: T, statusCode?: number): FastifyReply;
-    error(code: string, message: string, statusCode?: number, details?: any): FastifyReply;
+    error(code: string, message: string, statusCode?: number, details?: unknown): FastifyReply;
     paginated<T>(items: T[], pagination: PaginationInfo, statusCode?: number): FastifyReply;
   }
 }

@@ -13,13 +13,11 @@ export type CommentWithRelations = Prisma.CommentGetPayload<{
   include: {
     site: true;
     parent: true;
-    replies: {
-      include: {
-        replies: true;
-      };
-    };
+    replies: true;
   };
-}>;
+}> & {
+  replies?: any[];
+};
 
 // 用于 API 响应的 Comment 类型（隐藏敏感信息）
 export interface CommentResponse {
